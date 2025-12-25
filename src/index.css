@@ -35,3 +35,8 @@ body {
   animation: fadeIn 0.5s ease-out forwards;
 }
 
+/* Favicon styling to prevent stretching */
+link[rel="icon"] {
+  object-fit: contain;
+}
+
