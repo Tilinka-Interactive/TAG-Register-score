@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Reglas para partidas_registradas
+    match /partidas_registradas/{partidaId} {
+      // Permitir lectura y escritura si el documento existe pero está vacío
+      // o si el usuario está autenticado
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasAll(['id', 'avatarCode', 'score', 'horaIni', 'horaFin', 'nombre', 'email']);
+    }
+    
+    // Reglas para scores
+    match /scores/{scoreId} {
+      allow read: if true;
+      allow write: if true; // Ajustar según necesidades de seguridad
+    }
+    
+    // Reglas para users
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+

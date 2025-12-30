@@ -4,11 +4,22 @@ Proyecto de registro y puntuación para TAG - Level Up by ZYN
 
 ## Descripción
 
-Aplicación web React responsive con un flujo secuencial de 3 etapas:
+Aplicación web React responsive para registro de puntuaciones. **Solo se permite el registro mediante URL válida con parámetros**.
 
-1. **Animación inicial** (3 segundos): Grid animado de logos ZYN con contenedor de producto que se despliega automáticamente
-2. **Formulario de registro**: Formulario con campos para nombre completo y correo electrónico
-3. **Confirmación**: Pantalla final con el contenido del Screen 3 (grid + "GET SCORE") como confirmación de que se completó el registro
+### Flujo de Registro
+
+**Registro por URL** (`/registro/ABCD&850&...`):
+
+- Animación inicial (3 segundos) mientras se valida la URL
+- Validación del hash y verificación del ID en Firestore
+- Si la URL es válida: Formulario con campos para nombre completo y correo electrónico
+- Opción de registro con Google
+- Confirmación después del registro exitoso
+
+**Rutas inválidas:**
+
+- `/registro/` sin parámetros → Error: "Ruta inválida"
+- Cualquier otra ruta no definida → Error: "Ruta No Encontrada"
 
 ## Instalación
 
