@@ -5,5 +5,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/TAG-Register-score/', // Base path para GitHub Pages
+  publicDir: 'public', // Asegurar que los archivos de public se copien a dist
+  build: {
+    // Asegurar que 404.html se copie
+    copyPublicDir: true,
+  },
 })
 

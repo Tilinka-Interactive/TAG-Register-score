@@ -5,78 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ZYN</title>
     <script>
-      // GitHub Pages 404 redirect for SPA
-      // Single Page Apps for GitHub Pages
-      // https://github.com/rafgraph/spa-github-pages
-      // Updated for base path: /TAG-Register-score/
+      // GitHub Pages 404 redirect for HashRouter
+      // Convierte la URL a formato hash (#) y redirige a index.html
+      (function () {
+        var l = window.location;
+        var pathname = l.pathname;
+        var search = l.search;
+        var hash = l.hash;
 
-      // Obtener la ruta completa incluyendo parámetros
-      var pathSegmentsToKeep = 1; // Keep /TAG-Register-score/
-      var l = window.location;
-      var pathname = l.pathname;
-      var search = l.search;
+        // Si ya tiene hash, solo redirigir a index.html
+        if (hash && hash.startsWith("#")) {
+          var redirectUrl = l.origin + "/TAG-Register-score/index.html" + hash;
+          window.location.replace(redirectUrl);
+          return;
+        }
 
-      // Si la URL ya tiene el formato /?/ significa que ya fue procesada
-      if (pathname.includes("/?/")) {
-        // Ya está en el formato correcto, solo cargar index.html
-        var basePath = pathname.split("/?/")[0];
-        var redirectPath = pathname.split("/?/")[1];
-        window.location.replace(
-          basePath +
-            "/index.html" +
-            (redirectPath ? "?/" + redirectPath : "") +
-            search +
-            l.hash
-        );
-        return;
-      }
+        // Si no tiene hash, convertir el pathname a formato hash
+        // Remover el base path si existe
+        var cleanPath = pathname.replace(/^\/TAG-Register-score/, "");
+        if (cleanPath === "" || cleanPath === "/") {
+          cleanPath = "/";
+        }
 
-      // Si hay parámetros en el pathname (como /registro/MNOP&1000&...)
-      // Necesitamos preservarlos correctamente
-      var redirectPath =
-        pathname
-          .split("/")
-          .slice(0, 1 + pathSegmentsToKeep)
-          .join("/") +
-        "/?/" +
-        pathname
-          .slice(1)
-          .split("/")
-          .slice(pathSegmentsToKeep)
-          .join("/")
-          .replace(/&/g, "~and~");
+        // Construir la URL con hash
+        // Preservar search params si existen
+        var newHash = "#" + cleanPath + (search || "");
 
-      // Agregar search params si existen
-      if (search) {
-        redirectPath += "&" + search.slice(1).replace(/&/g, "~and~");
-      }
+        // Siempre incluir el base path
+        var newUrl = l.origin + "/TAG-Register-score/index.html" + newHash;
 
-      // Agregar hash si existe
-      if (l.hash) {
-        redirectPath += l.hash;
-      }
-
-      // Redirigir inmediatamente a index.html con los parámetros
-      window.location.replace(
-        l.protocol +
-          "//" +
-          l.hostname +
-          (l.port ? ":" + l.port : "") +
-          pathname
-            .split("/")
-            .slice(0, 1 + pathSegmentsToKeep)
-            .join("/") +
-          "/index.html?/" +
-          pathname
-            .slice(1)
-            .split("/")
-            .slice(pathSegmentsToKeep)
-            .join("/")
-            .replace(/&/g, "~and~") +
-          (search ? "&" + search.slice(1).replace(/&/g, "~and~") : "") +
-          l.hash
-      );
+        // Redirigir inmediatamente
+        window.location.replace(newUrl);
+      })();
     </script>
   </head>
-  <body></body>
+  <body>
+    <p>Redirigiendo...</p>
+  </body>
 </html>
