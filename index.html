@@ -14,23 +14,24 @@
     <script>
       // Script para manejar la redirección de GitHub Pages 404
       // Este script se ejecuta ANTES de que React cargue
-      // Convierte URLs del formato /?/...~and~... de vuelta a /...&...
+      // Convierte URLs del formato ?/...~and~... de vuelta a /...&...
       (function() {
         var pathname = window.location.pathname;
         var search = window.location.search;
         var hash = window.location.hash;
         
-        // Si la URL tiene el formato de GitHub Pages 404 redirect (/?/...)
-        if (pathname.includes('/?/')) {
-          // Extraer la ruta después de /?/
-          var redirectPath = pathname.split('/?/')[1] || '';
+        // Si la URL tiene el formato de GitHub Pages 404 redirect (?/...)
+        // El 404.html redirige a index.html?/...~and~...
+        if (search && search.startsWith('?/')) {
+          // Extraer la ruta después de ?/
+          var redirectPath = search.substring(2); // Remover '?/'
           
-          // Convertir ~and~ de vuelta a &
+          // Convertir TODOS los ~and~ de vuelta a & primero
           redirectPath = redirectPath.replace(/~and~/g, '&');
           
           // Reconstruir la URL correctamente
           var basePath = '/TAG-Register-score';
-          var newPath = basePath + '/' + redirectPath + search + hash;
+          var newPath = basePath + '/' + redirectPath + hash;
           
           // Reemplazar la URL sin recargar la página
           window.history.replaceState({}, '', newPath);
