@@ -8,40 +8,35 @@
     <meta name="theme-color" content="#00a9df" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ZYN</title>
-    <script type="module" crossorigin src="/TAG-Register-score/assets/index-CKXHhfG1.js"></script>
+    <script type="module" crossorigin src="/TAG-Register-score/assets/index-B1Liqt8i.js"></script>
     <link rel="stylesheet" crossorigin href="/TAG-Register-score/assets/index-BoijcKKc.css">
   </head>
   <body>
     <div id="root"></div>
     <script>
-      // Script para manejar la redirección de GitHub Pages 404
-      // Este script se ejecuta ANTES de que React cargue
-      // Convierte URLs del formato ?/...~and~... de vuelta a /...&...
+      // Script para convertir URLs de BrowserRouter a HashRouter
+      // Si alguien accede con una URL sin hash, convertirla a formato hash
       (function() {
         var pathname = window.location.pathname;
         var search = window.location.search;
         var hash = window.location.hash;
         
-        // Si la URL tiene el formato de GitHub Pages 404 redirect (?/...)
-        // El 404.html redirige a index.html?/...~and~...
-        if (search && search.startsWith('?/')) {
-          // Extraer la ruta después de ?/
-          var redirectPath = search.substring(2); // Remover '?/'
+        // Si no hay hash pero hay pathname que no sea solo / o /TAG-Register-score/
+        // Convertir a formato hash
+        if (!hash && pathname && pathname !== '/' && pathname !== '/TAG-Register-score/' && pathname !== '/TAG-Register-score') {
+          // Remover el base path si existe
+          var cleanPath = pathname.replace(/^\/TAG-Register-score/, '');
+          if (cleanPath === '') cleanPath = '/';
           
-          // Convertir TODOS los ~and~ de vuelta a & primero
-          redirectPath = redirectPath.replace(/~and~/g, '&');
-          
-          // Reconstruir la URL correctamente
-          var basePath = '/TAG-Register-score';
-          var newPath = basePath + '/' + redirectPath + hash;
-          
-          // Usar replace en lugar de replaceState para forzar recarga completa
-          // Esto asegura que todos los assets se carguen correctamente
-          window.location.replace(newPath);
-          return; // Detener la ejecución para evitar cargar React con la URL incorrecta
+          // Convertir a formato hash
+          var newHash = '#' + cleanPath + search;
+          var baseUrl = window.location.origin;
+          if (pathname.startsWith('/TAG-Register-score')) {
+            baseUrl += '/TAG-Register-score';
+          }
+          window.location.replace(baseUrl + '/' + newHash);
         }
       })();
     </script>
   </body>
 </html>
-
