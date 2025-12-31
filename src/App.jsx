@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Dashboard from './screens/Dashboard'
 import RegisterScreen from './screens/RegisterScreen'
 import RegisterSuccess from './screens/RegisterSuccess'
@@ -37,11 +37,10 @@ function NotFound() {
 }
 
 function App() {
-  // Base path para GitHub Pages (Vite lo inyecta automáticamente desde vite.config.js)
-  const basename = import.meta.env.BASE_URL;
-  
+  // HashRouter no necesita basename porque las rutas van en el hash (#)
+  // Esto funciona perfectamente con GitHub Pages sin necesidad de 404.html
   return (
-    <Router basename={basename}>
+    <Router>
       <Routes>
         <Route path="/" element={<Navigate to="/registro/" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />

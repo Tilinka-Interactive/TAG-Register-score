@@ -16,7 +16,8 @@ export const parseRegisterUrl = (pathname) => {
       decodedPathname = pathname;
     }
 
-    // Remover /registro/ del inicio (puede tener base path de GitHub Pages)
+    // Remover /registro/ del inicio
+    // Con HashRouter, el pathname viene sin el hash (#), solo la ruta
     const paramsString = decodedPathname
       .replace(/^\/TAG-Register-score\/registro\//, "")
       .replace(/^\/registro\//, "");
