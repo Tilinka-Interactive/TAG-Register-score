@@ -37,8 +37,11 @@ function NotFound() {
 }
 
 function App() {
+  // Base path para GitHub Pages (Vite lo inyecta automáticamente desde vite.config.js)
+  const basename = import.meta.env.BASE_URL;
+  
   return (
-    <Router>
+    <Router basename={basename}>
       <Routes>
         <Route path="/" element={<Navigate to="/registro/" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
