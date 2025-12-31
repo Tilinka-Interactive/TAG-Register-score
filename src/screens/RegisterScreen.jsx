@@ -13,6 +13,10 @@ import formBackground from "../assets/form-background.png";
 export default function RegisterScreen() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Obtener la URL completa incluyendo pathname y search (para GitHub Pages)
+  // En GitHub Pages, los parámetros pueden estar en el pathname o en el query string
+  const fullPath = location.pathname + (location.search || "");
   const [stage, setStage] = useState("animation"); // 'animation' | 'form' | 'error'
   const [registerData, setRegisterData] = useState(null);
   const [error, setError] = useState(null);
@@ -92,10 +96,19 @@ export default function RegisterScreen() {
       hasValidatedRef.current = true;
 
       try {
+        // Limpiar el pathname para verificar si tiene parámetros
+        // Remover el base path de GitHub Pages si existe
+        const cleanPathname = location.pathname.replace(
+          /^\/TAG-Register-score/,
+          ""
+        );
+
         // Si la URL es solo /registro/ sin parámetros, mostrar error
         if (
-          location.pathname === "/registro/" ||
-          location.pathname === "/registro"
+          cleanPathname === "/registro/" ||
+          cleanPathname === "/registro" ||
+          location.pathname === "/TAG-Register-score/registro/" ||
+          location.pathname === "/TAG-Register-score/registro"
         ) {
           setError(
             "Ruta inválida. Se requiere una URL de registro válida con parámetros."
@@ -104,7 +117,8 @@ export default function RegisterScreen() {
           return;
         }
 
-        // Parsear la URL
+        // Parsear la URL usando el pathname completo
+        // El script en index.html ya convirtió ~and~ de vuelta a & si venía del 404.html
         const parsed = parseRegisterUrl(location.pathname);
 
         if (parsed.error) {
