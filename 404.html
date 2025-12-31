@@ -9,24 +9,44 @@
       // Single Page Apps for GitHub Pages
       // https://github.com/rafgraph/spa-github-pages
       // Updated for base path: /TAG-Register-score/
+      
+      // Obtener la ruta completa incluyendo parámetros
       var pathSegmentsToKeep = 1; // Keep /TAG-Register-score/
       var l = window.location;
+      var pathname = l.pathname;
+      var search = l.search;
+      
+      // Si hay parámetros en el pathname (como /registro/MNOP&1000&...)
+      // Necesitamos preservarlos correctamente
+      var redirectPath = pathname
+        .split('/')
+        .slice(0, 1 + pathSegmentsToKeep)
+        .join('/') + '/?/' +
+        pathname
+          .slice(1)
+          .split('/')
+          .slice(pathSegmentsToKeep)
+          .join('/')
+          .replace(/&/g, '~and~');
+      
+      // Agregar search params si existen
+      if (search) {
+        redirectPath += '&' + search.slice(1).replace(/&/g, '~and~');
+      }
+      
+      // Agregar hash si existe
+      if (l.hash) {
+        redirectPath += l.hash;
+      }
+      
       l.replace(
         l.protocol +
           '//' +
           l.hostname +
           (l.port ? ':' + l.port : '') +
-          l.pathname
-            .split('/')
-            .slice(0, 1 + pathSegmentsToKeep)
-            .join('/') +
-          '/?/' +
-          l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-          l.hash
+          redirectPath
       );
     </script>
   </head>
   <body></body>
 </html>
-

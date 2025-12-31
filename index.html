@@ -8,11 +8,37 @@
     <meta name="theme-color" content="#00a9df" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ZYN</title>
-    <script type="module" crossorigin src="/TAG-Register-score/assets/index-Dds52MS4.js"></script>
+    <script type="module" crossorigin src="/TAG-Register-score/assets/index-BUnPTeOW.js"></script>
     <link rel="stylesheet" crossorigin href="/TAG-Register-score/assets/index-BoijcKKc.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Script para manejar la redirección de GitHub Pages 404
+      // Este script se ejecuta ANTES de que React cargue
+      // Convierte URLs del formato /?/...~and~... de vuelta a /...&...
+      (function() {
+        var pathname = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+        
+        // Si la URL tiene el formato de GitHub Pages 404 redirect (/?/...)
+        if (pathname.includes('/?/')) {
+          // Extraer la ruta después de /?/
+          var redirectPath = pathname.split('/?/')[1] || '';
+          
+          // Convertir ~and~ de vuelta a &
+          redirectPath = redirectPath.replace(/~and~/g, '&');
+          
+          // Reconstruir la URL correctamente
+          var basePath = '/TAG-Register-score';
+          var newPath = basePath + '/' + redirectPath + search + hash;
+          
+          // Reemplazar la URL sin recargar la página
+          window.history.replaceState({}, '', newPath);
+        }
+      })();
+    </script>
   </body>
 </html>
 
