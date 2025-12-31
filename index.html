@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#00a9df" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ZYN</title>
-    <script type="module" crossorigin src="/TAG-Register-score/assets/index-BUnPTeOW.js"></script>
+    <script type="module" crossorigin src="/TAG-Register-score/assets/index-CKXHhfG1.js"></script>
     <link rel="stylesheet" crossorigin href="/TAG-Register-score/assets/index-BoijcKKc.css">
   </head>
   <body>
@@ -35,8 +35,10 @@
           var basePath = '/TAG-Register-score';
           var newPath = basePath + '/' + redirectPath + hash;
           
-          // Reemplazar la URL sin recargar la página
-          window.history.replaceState({}, '', newPath);
+          // Usar replace en lugar de replaceState para forzar recarga completa
+          // Esto asegura que todos los assets se carguen correctamente
+          window.location.replace(newPath);
+          return; // Detener la ejecución para evitar cargar React con la URL incorrecta
         }
       })();
     </script>
