@@ -33,8 +33,10 @@
           var basePath = '/TAG-Register-score';
           var newPath = basePath + '/' + redirectPath + hash;
           
-          // Reemplazar la URL sin recargar la página
-          window.history.replaceState({}, '', newPath);
+          // Usar replace en lugar de replaceState para forzar recarga completa
+          // Esto asegura que todos los assets se carguen correctamente
+          window.location.replace(newPath);
+          return; // Detener la ejecución para evitar cargar React con la URL incorrecta
         }
       })();
     </script>
