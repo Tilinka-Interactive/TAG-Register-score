@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getBestScoresByUser, formatTiempoJuego } from "../services/scoreService";
+import { getAvatarPath, getFraternityColor } from "../utils/avatarUtils";
 import zynLogoForm from "../assets/zyn-logo-form.png";
 
 export default function Dashboard() {
@@ -239,7 +240,8 @@ export default function Dashboard() {
                     <th className="px-4 py-3 text-left font-bold text-sm md:text-base cursor-pointer hover:bg-[#00a9df]" onClick={() => handleSort("tiempo")}>
                       Tiempo {sortBy === "tiempo" && (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
-                    <th className="px-4 py-3 text-left font-bold text-sm md:text-base">Código Avatar</th>
+                    <th className="px-4 py-3 text-left font-bold text-sm md:text-base">Avatar</th>
+                    <th className="px-4 py-3 text-left font-bold text-sm md:text-base">Código</th>
                     <th className="px-4 py-3 text-left font-bold text-sm md:text-base">Fecha</th>
                   </tr>
                 </thead>
@@ -255,6 +257,37 @@ export default function Dashboard() {
                       <td className="px-4 py-3 text-[#001175] font-bold">{score.fraternidad || "N/A"}</td>
                       <td className="px-4 py-3 text-[#001175] font-bold text-lg">{score.score || 0}</td>
                       <td className="px-4 py-3 text-[#898d90]">{formatTiempoJuego(score.tiempoJuego)}</td>
+                      <td className="px-4 py-3">
+                        {score.avatarCode ? (
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center overflow-hidden flex-shrink-0"
+                              style={{
+                                backgroundColor: getFraternityColor(score.avatarCode),
+                              }}
+                            >
+                              {getAvatarPath(score.avatarCode) ? (
+                                <img
+                                  src={getAvatarPath(score.avatarCode)}
+                                  alt={`Avatar ${score.avatarCode}`}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.style.display = "none";
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-white/20 flex items-center justify-center">
+                                  <span className="text-xs font-bold text-white">
+                                    {score.avatarCode.substring(0, 2)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          "N/A"
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-[#001175] font-bold">{score.avatarCode || "N/A"}</td>
                       <td className="px-4 py-3 text-[#898d90] text-sm">
                         {score.createdAt

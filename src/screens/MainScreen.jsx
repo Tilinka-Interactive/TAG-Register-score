@@ -5,6 +5,7 @@ import {
   saveUserScore,
 } from "../services/authService";
 import { saveRegisterData } from "../services/registerService";
+import { getAvatarPath, getFraternityColor } from "../utils/avatarUtils";
 
 // Images - Local assets
 import zynLogoGrid from "../assets/zyn-logo-grid.png";
@@ -277,64 +278,123 @@ export default function MainScreen({ registerData = null }) {
         </div>
 
         <div className="relative w-full max-w-md h-full flex items-center justify-center z-10">
-          {/* Logo ZYN en la parte superior izquierda */}
-          <div className="absolute top-[3px] left-2 md:left-2 z-20">
-            <div className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24">
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <img
-                  alt="ZYN"
-                  className="absolute left-0 max-w-none w-full h-full top-0 object-contain"
-                  src={zynLogoForm}
-                />
-              </div>
-            </div>
-          </div>
-
           <form
             onSubmit={handleFormSubmit}
             className="relative w-full flex flex-col items-center justify-center px-4 md:px-8"
           >
-            {/* Avatar - muestra foto de Google si está autenticado */}
-            <div className="mb-6 md:mb-8 w-28 h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center overflow-hidden">
-              {user?.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt={user.displayName || "Usuario"}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback si la imagen falla (error 429 u otros)
-                    e.target.style.display = "none";
-                    e.target.nextElementSibling.style.display = "flex";
+            {/* Avatar - muestra avatar del código o foto de Google si está autenticado */}
+            {(() => {
+              const avatarCode = registerData?.avatarCode;
+              const avatarPath = avatarCode ? getAvatarPath(avatarCode) : null;
+              const fraternityColor = avatarCode
+                ? getFraternityColor(avatarCode)
+                : null;
+
+              return (
+                <div
+                  className="mb-6 md:mb-8 w-32 h-32 md:w-40 md:h-40 lg:w-44 lg:h-44 rounded-full border-2 border-white/30 flex items-center justify-center overflow-hidden relative"
+                  style={{
+                    backgroundColor:
+                      fraternityColor || "rgba(255, 255, 255, 0.2)",
                   }}
-                />
-              ) : null}
-              <div
-                className={`w-full h-full bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center ${
-                  user?.photoURL ? "hidden" : ""
-                }`}
-              >
-                <svg
-                  className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 text-white/50"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  {/* Mostrar avatar del código si existe */}
+                  {avatarPath ? (
+                    <img
+                      src={avatarPath}
+                      alt={`Avatar ${avatarCode}`}
+                      className="w-4/5 h-4/5 object-contain"
+                      onError={(e) => {
+                        // Fallback si el avatar no se carga
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  ) : user?.photoURL ? (
+                    // Si no hay avatar del código, mostrar foto de Google
+                    <img
+                      src={user.photoURL}
+                      alt={user.displayName || "Usuario"}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback si la imagen falla (error 429 u otros)
+                        e.target.style.display = "none";
+                        e.target.nextElementSibling.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  {/* Fallback: icono por defecto si no hay avatar ni foto de Google */}
+                  {!avatarPath && !user?.photoURL && (
+                    <div className="w-full h-full bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center">
+                      <svg
+                        className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 text-white/50"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Level Up */}
+            <h2
+              className="text-[#001175] font-['Helvetica',sans-serif] text-[77.366px] font-bold leading-normal text-center mb-4 md:mb-6"
+              style={{
+                color: "#001175",
+                fontFamily: "Helvetica",
+                fontSize: "77.366px",
+                fontStyle: "normal",
+                fontWeight: 700,
+                lineHeight: "normal",
+              }}
+            >
+              Level Up
+            </h2>
+
+            {/* Logo ZYN con "by" como superíndice a la izquierda */}
+            <div className="relative mb-8 md:mb-12 flex justify-center items-center">
+              {/* "by" posicionado como superíndice a la izquierda superior */}
+              <p
+                className="absolute -left-8 md:-left-12 lg:-left-16 -top-2 md:-top-3 lg:-top-4 text-[#001175] font-['Helvetica',sans-serif] text-[28.833px] font-bold leading-normal"
+                style={{
+                  color: "#001175",
+                  fontFamily: "Helvetica",
+                  fontSize: "28.833px",
+                  fontStyle: "normal",
+                  fontWeight: 700,
+                  lineHeight: "normal",
+                }}
+              >
+                by
+              </p>
+              {/* Logo ZYN */}
+              <div className="relative w-48 h-24 md:w-56 md:h-28 lg:w-64 lg:h-32">
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <img
+                    alt="ZYN"
+                    className="absolute left-0 max-w-none w-full h-full top-0 object-contain"
+                    src={zynLogoForm}
                   />
-                </svg>
+                </div>
               </div>
             </div>
 
-            <h1 className="font-['Helvetica',sans-serif] font-bold text-[#001175] text-6xl md:text-6xl lg:text-[56.537px] mb-4 md:mb-6 text-center">
-              Level Up
-            </h1>
-            <p className="font-['Helvetica',sans-serif] font-bold text-white text-lg md:text-xl lg:text-[23.824px] mb-8 md:mb-12 text-center">
-              Tu registro
-            </p>
+            {/* Label sobre contenedor blanco */}
+            <div className="mb-4 md:mb-6 w-full max-w-[16rem] md:max-w-[20rem]">
+              <div className="bg-white rounded-[47.647px] px-2.5 md:px-3 py-2 md:py-2.5 shadow-lg">
+                <p className="font-['Helvetica',sans-serif] font-bold text-xs md:text-sm text-[#001175] text-center">
+                  Cada jugada cuenta, cada bolsita te lleva al siguiente nivel
+                </p>
+              </div>
+            </div>
 
             <div className="w-full max-w-xs md:max-w-sm mb-4 md:mb-6">
               <div className="relative bg-white rounded-[47.647px] h-12 md:h-14 lg:h-16">
@@ -479,6 +539,15 @@ export default function MainScreen({ registerData = null }) {
                   src={zynLogoConfirmation}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Label sobre contenedor blanco */}
+          <div className="mb-4 md:mb-6 w-full max-w-[16rem] md:max-w-[20rem]">
+            <div className="bg-white rounded-[47.647px] px-2.5 md:px-3 py-2 md:py-2.5 shadow-lg">
+              <p className="font-['Helvetica',sans-serif] font-bold text-xs md:text-sm text-[#001175] text-center">
+                Cada jugada cuenta, cada bolsita te lleva al siguiente nivel
+              </p>
             </div>
           </div>
 
