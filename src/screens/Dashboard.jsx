@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getBestScoresByUser, formatTiempoJuego } from "../services/scoreService";
-import { getAvatarPath, getFraternityColor } from "../utils/avatarUtils";
+import { getAvatarPath, getFraternityColor, getFraternityFrame } from "../utils/avatarUtils";
 import zynLogoForm from "../assets/zyn-logo-form.png";
 
 export default function Dashboard() {
@@ -261,22 +261,29 @@ export default function Dashboard() {
                         {score.avatarCode ? (
                           <div className="flex items-center gap-2">
                             <div
-                              className="w-10 h-10 rounded-full border-2 border-white/30 flex items-center justify-center overflow-hidden flex-shrink-0"
+                              className="w-10 h-10 rounded-full border-2 flex items-center justify-center overflow-hidden flex-shrink-0 relative"
                               style={{
-                                backgroundColor: getFraternityColor(score.avatarCode),
+                                borderColor: getFraternityColor(score.avatarCode),
                               }}
                             >
+                              {/* Marco de fraternidad como fondo */}
+                              <img
+                                src={getFraternityFrame(score.avatarCode)}
+                                alt="Marco de fraternidad"
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                              {/* Avatar dentro del marco */}
                               {getAvatarPath(score.avatarCode) ? (
                                 <img
                                   src={getAvatarPath(score.avatarCode)}
                                   alt={`Avatar ${score.avatarCode}`}
-                                  className="w-full h-full object-cover"
+                                  className="relative z-10 w-4/5 h-4/5 object-contain"
                                   onError={(e) => {
                                     e.target.style.display = "none";
                                   }}
                                 />
                               ) : (
-                                <div className="w-full h-full bg-white/20 flex items-center justify-center">
+                                <div className="relative z-10 w-full h-full bg-white/20 flex items-center justify-center">
                                   <span className="text-xs font-bold text-white">
                                     {score.avatarCode.substring(0, 2)}
                                   </span>

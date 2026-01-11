@@ -1,7 +1,18 @@
+// Importar marco genérico
+import marcoGenerico from "../assets/Marco.png";
+
 // Importar todos los avatares usando import.meta.glob de Vite
 const avatarModules = import.meta.glob("../assets/avatars/*.png", {
   eager: true,
 });
+
+// Importar todos los marcos de fraternidad
+const fraternityFrameModules = import.meta.glob(
+  "../assets/Fraternidades/*.png",
+  {
+    eager: true,
+  }
+);
 
 /**
  * Obtiene la ruta del avatar basado en los primeros 3 caracteres del código
@@ -40,34 +51,35 @@ export const getFraternityColor = (avatarCode) => {
 
   const fraternityChar = avatarCode.charAt(3).toUpperCase();
 
-  // Mapeo de caracteres a colores
+  // Mapeo de caracteres a colores (actualizados)
   const colorMap = {
-    A: "#FF6B6B", // Rojo coral
-    B: "#4ECDC4", // Turquesa
-    C: "#45B7D1", // Azul claro
-    D: "#96CEB4", // Verde menta
-    E: "#FFEAA7", // Amarillo pastel
-    F: "#DDA0DD", // Ciruela
-    G: "#98D8C8", // Verde agua
-    H: "#F7DC6F", // Amarillo dorado
-    I: "#BB8FCE", // Púrpura claro
-    J: "#85C1E2", // Azul cielo
-    K: "#F8B88B", // Melocotón
-    L: "#AED6F1", // Azul pastel
-    M: "#F1948A", // Salmón
-    N: "#82E0AA", // Verde lima
-    O: "#F9E79F", // Amarillo crema
-    P: "#D7BDE2", // Lavanda
-    Q: "#A9DFBF", // Verde esmeralda claro
-    R: "#F5B7B1", // Rosa claro
-    S: "#AED6F1", // Azul bebé
-    T: "#D5DBDB", // Gris claro
-    U: "#FAD7A0", // Durazno
-    V: "#A3E4D7", // Turquesa claro
-    W: "#F8C471", // Naranja claro
-    X: "#C39BD3", // Púrpura medio
-    Y: "#85C1E9", // Azul claro
-    Z: "#F7DC6F", // Amarillo
+    A: "#FF3B3B", // Rojo intenso
+    B: "#FF8C00", // Naranja brillante
+    C: "#FFD700", // Amarillo dorado
+    D: "#7CFC00", // Verde lima
+    E: "#00FF7F", // Verde primavera
+    F: "#00CED1", // Turquesa
+    G: "#00BFFF", // Azul cielo intenso
+    H: "#1E90FF", // Azul fuerte
+    I: "#4169E1", // Azul real
+    J: "#8A2BE2", // Violeta
+    K: "#FF00FF", // Magenta
+    L: "#FF1493", // Rosa fuerte
+    M: "#A52A2A", // Marrón rojo
+    N: "#FF4500", // Rojo anaranjado
+    O: "#00FF00", // Verde puro
+    P: "#00FFFF", // Cian puro
+    // Colores por defecto para Q-Z si se necesitan
+    Q: "#8B5CF6",
+    R: "#8B5CF6",
+    S: "#8B5CF6",
+    T: "#8B5CF6",
+    U: "#8B5CF6",
+    V: "#8B5CF6",
+    W: "#8B5CF6",
+    X: "#8B5CF6",
+    Y: "#8B5CF6",
+    Z: "#8B5CF6",
   };
 
   return colorMap[fraternityChar] || "#8B5CF6"; // Color por defecto si no está en el mapa
@@ -116,4 +128,31 @@ export const getFraternityColorClass = (avatarCode) => {
   };
 
   return colorClassMap[fraternityChar] || "bg-purple-500";
+};
+
+/**
+ * Obtiene la ruta del marco de fraternidad basado en el cuarto carácter
+ * Siempre retorna un marco (específico de fraternidad o genérico)
+ * @param {string} avatarCode - Código de 4 caracteres (puede ser vacío para marco genérico)
+ * @returns {string} - Ruta del marco de fraternidad o marco genérico
+ */
+export const getFraternityFrame = (avatarCode) => {
+  // Si no hay código o es muy corto, retornar marco genérico
+  if (!avatarCode || avatarCode.length < 4) {
+    return marcoGenerico;
+  }
+
+  const fraternityChar = avatarCode.charAt(3).toUpperCase();
+
+  // Buscar el marco de fraternidad en los módulos importados
+  const framePath = `../assets/Fraternidades/${fraternityChar}.png`;
+  const frameModule = fraternityFrameModules[framePath];
+
+  // Si se encuentra el marco específico, usarlo
+  if (frameModule) {
+    return frameModule.default || frameModule;
+  }
+
+  // Si no se encuentra el marco específico, SIEMPRE usar el genérico
+  return marcoGenerico;
 };

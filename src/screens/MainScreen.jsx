@@ -5,7 +5,12 @@ import {
   saveUserScore,
 } from "../services/authService";
 import { saveRegisterData } from "../services/registerService";
-import { getAvatarPath, getFraternityColor } from "../utils/avatarUtils";
+import {
+  getAvatarPath,
+  getFraternityColor,
+  getFraternityFrame,
+} from "../utils/avatarUtils";
+import marcoGenerico from "../assets/Marco.png";
 
 // Images - Local assets
 import zynLogoGrid from "../assets/zyn-logo-grid.png";
@@ -289,42 +294,46 @@ export default function MainScreen({ registerData = null }) {
               const fraternityColor = avatarCode
                 ? getFraternityColor(avatarCode)
                 : null;
+              // Siempre obtener un marco (genérico si no hay código o no se encuentra el específico)
+              const fraternityFrame = avatarCode
+                ? getFraternityFrame(avatarCode)
+                : getFraternityFrame(""); // Pasar string vacío para obtener marco genérico
+
+              // Debug: verificar que el marco se esté cargando
+              console.log("Marco cargado:", fraternityFrame);
 
               return (
-                <div
-                  className="mb-6 md:mb-8 w-32 h-32 md:w-40 md:h-40 lg:w-44 lg:h-44 rounded-full border-2 border-white/30 flex items-center justify-center overflow-hidden relative"
-                  style={{
-                    backgroundColor:
-                      fraternityColor || "rgba(255, 255, 255, 0.2)",
-                  }}
-                >
-                  {/* Mostrar avatar del código si existe */}
+                <div className="mb-6 md:mb-8 w-[164px] h-[164px] md:w-[170px] md:h-[170px] lg:w-[186px] lg:h-[186px] rounded-full flex items-center justify-center relative">
+                  {/* Marco genérico - siempre se muestra como capa más externa */}
+                  <img
+                    src={marcoGenerico}
+                    alt="Marco genérico"
+                    className="absolute inset-0 w-full h-full object-contain z-0"
+                  />
+
+                  {/* Marco de fraternidad - dentro del marco genérico, un poco más pequeño */}
+                  <img
+                    src={fraternityFrame}
+                    alt="Marco de fraternidad"
+                    className="absolute inset-0 w-10/12 h-10/12 object-contain z-10 m-auto"
+                  />
+
+                  {/* Avatar dentro del marco - más pequeño para que el marco se vea alrededor */}
                   {avatarPath ? (
                     <img
                       src={avatarPath}
                       alt={`Avatar ${avatarCode}`}
-                      className="w-4/5 h-4/5 object-contain"
+                      className="relative z-20 w-1/2 h-1/2 object-contain"
                       onError={(e) => {
                         // Fallback si el avatar no se carga
                         e.target.style.display = "none";
                       }}
                     />
-                  ) : user?.photoURL ? (
-                    // Si no hay avatar del código, mostrar foto de Google
-                    <img
-                      src={user.photoURL}
-                      alt={user.displayName || "Usuario"}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Fallback si la imagen falla (error 429 u otros)
-                        e.target.style.display = "none";
-                        e.target.nextElementSibling.style.display = "flex";
-                      }}
-                    />
                   ) : null}
+
                   {/* Fallback: icono por defecto si no hay avatar ni foto de Google */}
                   {!avatarPath && !user?.photoURL && (
-                    <div className="w-full h-full bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center">
+                    <div className="relative z-20 w-2/3 h-2/3 bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center rounded-full">
                       <svg
                         className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 text-white/50"
                         fill="none"
