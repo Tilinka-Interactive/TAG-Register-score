@@ -29,6 +29,7 @@ export default function MainScreen({ registerData = null }) {
   });
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Observar cambios en autenticación
   useEffect(() => {
@@ -64,6 +65,19 @@ export default function MainScreen({ registerData = null }) {
       return () => clearTimeout(timer);
     }
   }, [stage, registerData]);
+
+  // Activar confeti por 3 segundos cuando se entra a la pantalla de confirmación
+  useEffect(() => {
+    if (stage === "confirmation") {
+      setShowConfetti(true);
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowConfetti(false);
+    }
+  }, [stage]);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -195,6 +209,75 @@ export default function MainScreen({ registerData = null }) {
     return logos;
   };
 
+  // Renderizar serpentinas/confeti que caen desde arriba
+  const renderConfetti = () => {
+    const confettiPieces = [];
+    const colors = [
+      "#FF3B3B",
+      "#FF8C00",
+      "#FFD700",
+      "#7CFC00",
+      "#00FF7F",
+      "#00CED1",
+      "#00BFFF",
+      "#1E90FF",
+      "#4169E1",
+      "#8A2BE2",
+      "#FF00FF",
+      "#FF1493",
+    ];
+
+    // Crear 80 piezas de confeti/serpentinas
+    for (let i = 0; i < 80; i++) {
+      const left = Math.random() * 100; // Posición horizontal aleatoria
+      // Distribuir los delays uniformemente durante los 3 segundos
+      const delay = (i / 80) * 2.5; // Delay distribuido de 0 a 2.5 segundos
+      const duration = 1.5 + Math.random() * 1; // Duración entre 1.5-2.5 segundos
+      const color = colors[Math.floor(Math.random() * colors.length)];
+
+      // Crear diferentes tipos de piezas: serpentinas largas y confeti pequeño
+      const isStreamer = Math.random() > 0.4; // 60% serpentinas, 40% confeti
+
+      let width, height, borderRadius;
+      if (isStreamer) {
+        // Serpentinas: largas y delgadas
+        width = 4 + Math.random() * 3; // 4-7px de ancho
+        height = 60 + Math.random() * 80; // 60-140px de largo
+        borderRadius = "2px";
+      } else {
+        // Confeti: pequeños cuadrados/círculos
+        const size = 6 + Math.random() * 8; // 6-14px
+        width = size;
+        height = size;
+        borderRadius = Math.random() > 0.5 ? "50%" : "2px"; // Algunos círculos, algunos cuadrados
+      }
+
+      const initialRotation = Math.random() * 360;
+      const drift = (Math.random() - 0.5) * 80; // Deriva horizontal aleatoria (-40px a +40px)
+
+      confettiPieces.push(
+        <div
+          key={`confetti-${i}`}
+          className="absolute pointer-events-none"
+          style={{
+            left: `calc(${left}% + ${drift}px)`,
+            top: "-100px",
+            width: `${width}px`,
+            height: `${height}px`,
+            backgroundColor: color,
+            borderRadius: borderRadius,
+            animation: `fall ${duration}s linear ${delay}s forwards`,
+            transform: `rotate(${initialRotation}deg)`,
+            zIndex: 1000,
+            boxShadow: `0 0 ${width}px ${color}`,
+          }}
+        />
+      );
+    }
+
+    return confettiPieces;
+  };
+
   // Renderizar grid de logos como marca de agua (mismo que animación inicial pero con opacity reducida)
   const renderWatermarkGrid = () => {
     const rows = 10;
@@ -252,18 +335,55 @@ export default function MainScreen({ registerData = null }) {
   // Pantalla de animación inicial
   if (stage === "animation") {
     return (
-      <div className="bg-[#00a9df] relative w-full h-screen overflow-hidden">
-        {renderLogoGrid()}
-        <div className="absolute inset-[27.38%_7.48%_27.38%_7.5%] md:inset-[27.38%_7.48%_27.38%_7.5%] animate-fadeIn">
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <img
-                alt=""
-                className="absolute left-0 max-w-none w-full h-full top-0 object-contain"
-                src={miniPacketOpen}
-              />
+      <div
+        className="relative w-full h-screen"
+        style={{ position: "relative" }}
+      >
+        <div className="bg-[#00a9df] relative w-full h-screen overflow-hidden">
+          {renderLogoGrid()}
+          <div className="absolute inset-[27.38%_7.48%_27.38%_7.5%] md:inset-[27.38%_7.48%_27.38%_7.5%] animate-fadeIn">
+            <div className="absolute inset-0">
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <img
+                  alt=""
+                  className="absolute left-0 max-w-none w-full h-full top-0 object-contain"
+                  src={miniPacketOpen}
+                />
+              </div>
             </div>
           </div>
+        </div>
+        {/* Footer de advertencia - 10% de la página - fuera del contenedor principal */}
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "10vh",
+            minHeight: "60px",
+            backgroundColor: "#FFFFFF",
+            borderTop: "2px solid #000000",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 1rem",
+            zIndex: 99999,
+            boxShadow: "0 -4px 6px -1px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <p
+            style={{
+              color: "#000000",
+              fontWeight: "bold",
+              fontSize: "0.75rem",
+              textAlign: "center",
+              maxWidth: "64rem",
+            }}
+          >
+            Este producto no es libre de riegos y contiene nicotina, que es
+            adictiva, venta exclusiva para adultos.
+          </p>
         </div>
       </div>
     );
@@ -287,7 +407,7 @@ export default function MainScreen({ registerData = null }) {
             onSubmit={handleFormSubmit}
             className="relative w-full flex flex-col items-center justify-center px-4 md:px-8"
           >
-            {/* Avatar - muestra avatar del código o foto de Google si está autenticado */}
+            {/* Avatar y Puntuación - muestra avatar a la izquierda y puntuación a la derecha */}
             {(() => {
               const avatarCode = registerData?.avatarCode;
               const avatarPath = avatarCode ? getAvatarPath(avatarCode) : null;
@@ -298,55 +418,88 @@ export default function MainScreen({ registerData = null }) {
               const fraternityFrame = avatarCode
                 ? getFraternityFrame(avatarCode)
                 : getFraternityFrame(""); // Pasar string vacío para obtener marco genérico
-
-              // Debug: verificar que el marco se esté cargando
-              console.log("Marco cargado:", fraternityFrame);
+              const score = registerData?.score || 0;
 
               return (
-                <div className="mb-6 md:mb-8 w-[164px] h-[164px] md:w-[170px] md:h-[170px] lg:w-[186px] lg:h-[186px] rounded-full flex items-center justify-center relative">
-                  {/* Marco genérico - siempre se muestra como capa más externa */}
-                  <img
-                    src={marcoGenerico}
-                    alt="Marco genérico"
-                    className="absolute inset-0 w-full h-full object-contain z-0"
-                  />
-
-                  {/* Marco de fraternidad - dentro del marco genérico, un poco más pequeño */}
-                  <img
-                    src={fraternityFrame}
-                    alt="Marco de fraternidad"
-                    className="absolute inset-0 w-10/12 h-10/12 object-contain z-10 m-auto"
-                  />
-
-                  {/* Avatar dentro del marco - más pequeño para que el marco se vea alrededor */}
-                  {avatarPath ? (
-                    <img
-                      src={avatarPath}
-                      alt={`Avatar ${avatarCode}`}
-                      className="relative z-20 w-1/2 h-1/2 object-contain"
-                      onError={(e) => {
-                        // Fallback si el avatar no se carga
-                        e.target.style.display = "none";
+                <div className="mb-6 md:mb-8 w-full max-w-xs md:max-w-sm flex items-center justify-between gap-4 md:gap-6">
+                  {/* Avatar a la izquierda */}
+                  <div className="w-[164px] h-[164px] md:w-[170px] md:h-[170px] lg:w-[186px] lg:h-[186px] rounded-full flex items-center justify-center relative flex-shrink-0">
+                    {/* Marco genérico - siempre se muestra como capa más externa con color */}
+                    <div
+                      className="absolute inset-0 w-full h-full z-0"
+                      style={{
+                        backgroundColor: fraternityColor || "#FFFFFF",
+                        maskImage: `url(${marcoGenerico})`,
+                        WebkitMaskImage: `url(${marcoGenerico})`,
+                        maskSize: "contain",
+                        WebkitMaskSize: "contain",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskPosition: "center",
+                        WebkitMaskPosition: "center",
                       }}
                     />
-                  ) : null}
 
-                  {/* Fallback: icono por defecto si no hay avatar ni foto de Google */}
-                  {!avatarPath && !user?.photoURL && (
-                    <div className="relative z-20 w-2/3 h-2/3 bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center rounded-full">
-                      <svg
-                        className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 text-white/50"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
+                    {/* Marco de fraternidad - dentro del marco genérico, un poco más pequeño con color */}
+                    <div
+                      className="absolute inset-0 w-4/5 h-4/5 z-10 m-auto"
+                      style={{
+                        backgroundColor: fraternityColor || "#FFFFFF",
+                        maskImage: `url(${fraternityFrame})`,
+                        WebkitMaskImage: `url(${fraternityFrame})`,
+                        maskSize: "contain",
+                        WebkitMaskSize: "contain",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskPosition: "center",
+                        WebkitMaskPosition: "center",
+                      }}
+                    />
+
+                    {/* Avatar dentro del marco - más pequeño para que el marco se vea alrededor */}
+                    {avatarPath ? (
+                      <img
+                        src={avatarPath}
+                        alt={`Avatar ${avatarCode}`}
+                        className="relative z-20 w-1/2 h-1/2 object-contain"
+                        onError={(e) => {
+                          // Fallback si el avatar no se carga
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    ) : null}
+
+                    {/* Fallback: icono por defecto si no hay avatar ni foto de Google */}
+                    {!avatarPath && !user?.photoURL && (
+                      <div className="relative z-20 w-2/3 h-2/3 bg-gradient-to-br from-white/30 to-white/10 flex items-center justify-center rounded-full">
+                        <svg
+                          className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 text-white/50"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Puntuación a la derecha - solo si hay registerData */}
+                  {registerData && (
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="text-center">
+                        <p className="text-white text-xs md:text-sm font-bold mb-1">
+                          Puntuación
+                        </p>
+                        <p className="text-[#001175] text-4xl md:text-5xl lg:text-6xl font-bold">
+                          {(registerData.score || 0).toLocaleString()}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -501,6 +654,13 @@ export default function MainScreen({ registerData = null }) {
   // Pantalla de confirmación
   return (
     <div className="bg-[#00a9df] relative w-full min-h-screen overflow-hidden">
+      {/* Serpentinas/Confeti cayendo desde arriba - solo por 3 segundos */}
+      {showConfetti && (
+        <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+          {renderConfetti()}
+        </div>
+      )}
+
       {/* Grid de logos como marca de agua */}
       <div className="absolute inset-0 pointer-events-none z-0">
         {renderWatermarkGrid()}
@@ -597,6 +757,14 @@ export default function MainScreen({ registerData = null }) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Footer de advertencia - 10% de la página */}
+      <div className="fixed bottom-0 left-0 right-0 h-[10vh] min-h-[60px] bg-white border-t-2 border-black flex items-center justify-center px-4 z-[9999] shadow-lg">
+        <p className="text-black font-bold text-xs md:text-sm text-center max-w-4xl">
+          Este producto no es libre de riegos y contiene nicotina, que es
+          adictiva, venta exclusiva para adultos.
+        </p>
       </div>
     </div>
   );

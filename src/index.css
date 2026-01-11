@@ -35,6 +35,29 @@ body {
   animation: fadeIn 0.5s ease-out forwards;
 }
 
+@keyframes fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(25vh) rotate(90deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(50vh) rotate(180deg);
+    opacity: 0.9;
+  }
+  75% {
+    transform: translateY(75vh) rotate(270deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px)) rotate(720deg);
+    opacity: 0;
+  }
+}
+
 /* Favicon styling to prevent stretching */
 link[rel="icon"] {
   object-fit: contain;
