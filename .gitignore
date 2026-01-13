@@ -18,6 +18,11 @@ SECRET_KEY.txt
 .env.local
 .env.*.local
 
+# Firebase credentials
+*-credentials.json
+*-firebase-adminsdk-*.json
+zyn-tag-credentials.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

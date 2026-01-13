@@ -18,6 +18,7 @@ import miniPacketOpen from "../assets/mini-packet-open.png";
 import formBackground from "../assets/form-background.png";
 import zynLogoForm from "../assets/zyn-logo-form.png";
 import zynLogoConfirmation from "../assets/zyn-logo-confirmation.png";
+import tilinkaLogo from "../assets/tilinkagames.svg";
 
 // Estados: 'animation' | 'form' | 'confirmation'
 export default function MainScreen({ registerData = null }) {
@@ -235,44 +236,89 @@ export default function MainScreen({ registerData = null }) {
       const duration = 1.5 + Math.random() * 1; // Duración entre 1.5-2.5 segundos
       const color = colors[Math.floor(Math.random() * colors.length)];
 
-      // Crear diferentes tipos de piezas: serpentinas largas y confeti pequeño
+      // Crear diferentes tipos de piezas: serpentinas curvas/espirales y confeti pequeño
       const isStreamer = Math.random() > 0.4; // 60% serpentinas, 40% confeti
 
-      let width, height, borderRadius;
       if (isStreamer) {
-        // Serpentinas: largas y delgadas
-        width = 4 + Math.random() * 3; // 4-7px de ancho
-        height = 60 + Math.random() * 80; // 60-140px de largo
-        borderRadius = "2px";
+        // Serpentinas curvas/espirales usando SVG
+        const length = 60 + Math.random() * 80; // 60-140px de largo
+        const width = 3 + Math.random() * 2; // 3-5px de ancho
+        const spiralTurns = 2 + Math.random() * 3; // 2-5 vueltas de espiral
+        const spiralRadius = 10 + Math.random() * 20; // Radio de la espiral 10-30px
+        const initialRotation = Math.random() * 360;
+        const drift = (Math.random() - 0.5) * 80; // Deriva horizontal aleatoria
+
+        // Crear path SVG para espiral/curva
+        const pathPoints = [];
+        const segments = 20; // Número de segmentos para la curva suave
+        for (let j = 0; j <= segments; j++) {
+          const t = j / segments;
+          const angle = t * spiralTurns * Math.PI * 2;
+          const radius = t * spiralRadius;
+          const x = Math.cos(angle) * radius;
+          const y = t * length;
+          pathPoints.push(`${j === 0 ? "M" : "L"} ${x} ${y}`);
+        }
+        const pathData = pathPoints.join(" ");
+
+        confettiPieces.push(
+          <svg
+            key={`confetti-${i}`}
+            className="absolute pointer-events-none"
+            style={{
+              left: `calc(${left}% + ${drift}px)`,
+              top: "-100px",
+              width: `${spiralRadius * 2 + width}px`,
+              height: `${length + 20}px`,
+              animation: `fall ${duration}s linear ${delay}s forwards`,
+              transform: `rotate(${initialRotation}deg)`,
+              zIndex: 1000,
+            }}
+            viewBox={`${-spiralRadius - width} 0 ${
+              spiralRadius * 2 + width * 2
+            } ${length + 20}`}
+            preserveAspectRatio="none"
+          >
+            <path
+              d={pathData}
+              stroke={color}
+              strokeWidth={width}
+              fill="none"
+              strokeLinecap="round"
+              style={{
+                filter: `drop-shadow(0 0 ${width}px ${color})`,
+              }}
+            />
+          </svg>
+        );
       } else {
         // Confeti: pequeños cuadrados/círculos
         const size = 6 + Math.random() * 8; // 6-14px
-        width = size;
-        height = size;
-        borderRadius = Math.random() > 0.5 ? "50%" : "2px"; // Algunos círculos, algunos cuadrados
+        const width = size;
+        const height = size;
+        const borderRadius = Math.random() > 0.5 ? "50%" : "2px";
+        const initialRotation = Math.random() * 360;
+        const drift = (Math.random() - 0.5) * 80;
+
+        confettiPieces.push(
+          <div
+            key={`confetti-${i}`}
+            className="absolute pointer-events-none"
+            style={{
+              left: `calc(${left}% + ${drift}px)`,
+              top: "-100px",
+              width: `${width}px`,
+              height: `${height}px`,
+              backgroundColor: color,
+              borderRadius: borderRadius,
+              animation: `fall ${duration}s linear ${delay}s forwards`,
+              transform: `rotate(${initialRotation}deg)`,
+              zIndex: 1000,
+              boxShadow: `0 0 ${width}px ${color}`,
+            }}
+          />
+        );
       }
-
-      const initialRotation = Math.random() * 360;
-      const drift = (Math.random() - 0.5) * 80; // Deriva horizontal aleatoria (-40px a +40px)
-
-      confettiPieces.push(
-        <div
-          key={`confetti-${i}`}
-          className="absolute pointer-events-none"
-          style={{
-            left: `calc(${left}% + ${drift}px)`,
-            top: "-100px",
-            width: `${width}px`,
-            height: `${height}px`,
-            backgroundColor: color,
-            borderRadius: borderRadius,
-            animation: `fall ${duration}s linear ${delay}s forwards`,
-            transform: `rotate(${initialRotation}deg)`,
-            zIndex: 1000,
-            boxShadow: `0 0 ${width}px ${color}`,
-          }}
-        />
-      );
     }
 
     return confettiPieces;
@@ -392,7 +438,7 @@ export default function MainScreen({ registerData = null }) {
   // Pantalla de formulario
   if (stage === "form") {
     return (
-      <div className="bg-[#00a9df] relative w-full h-screen overflow-hidden flex items-center justify-center p-4 md:p-8">
+      <div className="bg-[#00a9df] relative w-full min-h-screen overflow-y-auto flex items-center justify-center p-2 md:p-6">
         {/* Fondo de formulario aplicado a toda la pantalla */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           <img
@@ -402,12 +448,34 @@ export default function MainScreen({ registerData = null }) {
           />
         </div>
 
-        <div className="relative w-full max-w-md h-full flex items-center justify-center z-10">
+        <div className="relative w-full max-w-md min-h-full flex items-center justify-center z-10 py-8">
+          {/* Logo Tilinka en la esquina superior izquierda */}
+          <div className="fixed z-20" style={{ top: "20px", left: "20px" }}>
+            <img src={tilinkaLogo} alt="Tilinka Games" className="h-8 w-auto" />
+          </div>
+
           <form
             onSubmit={handleFormSubmit}
             className="relative w-full flex flex-col items-center justify-center px-4 md:px-8"
           >
-            {/* Avatar y Puntuación - muestra avatar a la izquierda y puntuación a la derecha */}
+            {/* Puntuación en la esquina superior derecha - solo si hay registerData */}
+            {registerData && (
+              <div
+                className="fixed z-20"
+                style={{ top: "20px", right: "20px" }}
+              >
+                <div className="text-right">
+                  <p className="text-white text-3xl md:text-4xl lg:text-5xl font-bold">
+                    {(registerData.score || 0).toLocaleString()}
+                  </p>
+                  <p className="text-white text-xs md:text-sm font-bold mb-1">
+                    Puntuación
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Avatar centrado */}
             {(() => {
               const avatarCode = registerData?.avatarCode;
               const avatarPath = avatarCode ? getAvatarPath(avatarCode) : null;
@@ -421,8 +489,8 @@ export default function MainScreen({ registerData = null }) {
               const score = registerData?.score || 0;
 
               return (
-                <div className="mb-6 md:mb-8 w-full max-w-xs md:max-w-sm flex items-center justify-between gap-4 md:gap-6">
-                  {/* Avatar a la izquierda */}
+                <div className="mb-6 md:mb-8 w-full flex items-center justify-center">
+                  {/* Avatar centrado */}
                   <div className="w-[141px] h-[141px] md:w-[131px] md:h-[131px] lg:w-[133px] lg:h-[133px] rounded-full flex items-center justify-center relative flex-shrink-0">
                     {/* Marco genérico - siempre se muestra como capa más externa con color */}
                     <div
@@ -440,11 +508,11 @@ export default function MainScreen({ registerData = null }) {
                       }}
                     />
 
-                    {/* Marco de fraternidad - dentro del marco genérico, un poco más pequeño con color */}
+                    {/* Marco de fraternidad - dentro del marco genérico, siempre blanco */}
                     <div
                       className="absolute inset-0 w-4/5 h-4/5 z-10 m-auto"
                       style={{
-                        backgroundColor: fraternityColor || "#FFFFFF",
+                        backgroundColor: "#FFFFFF",
                         maskImage: `url(${fraternityFrame})`,
                         WebkitMaskImage: `url(${fraternityFrame})`,
                         maskSize: "contain",
@@ -488,31 +556,17 @@ export default function MainScreen({ registerData = null }) {
                       </div>
                     )}
                   </div>
-
-                  {/* Puntuación a la derecha - solo si hay registerData */}
-                  {registerData && (
-                    <div className="flex-1 flex items-center justify-center">
-                      <div className="text-center">
-                        <p className="text-white text-xs md:text-sm font-bold mb-1">
-                          Puntuación
-                        </p>
-                        <p className="text-[#001175] text-4xl md:text-5xl lg:text-6xl font-bold">
-                          {(registerData.score || 0).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })()}
 
             {/* Level Up */}
             <h2
-              className="text-[#001175] font-['Helvetica',sans-serif] text-[58.02px] font-bold leading-normal text-center mb-4 md:mb-6"
+              className="text-[#001175] font-['Helvetica',sans-serif] text-[46.416px] font-bold leading-normal text-center mb-4 md:mb-6"
               style={{
                 color: "#001175",
                 fontFamily: "Helvetica",
-                fontSize: "58.02px",
+                fontSize: "46.416px",
                 fontStyle: "normal",
                 fontWeight: 700,
                 lineHeight: "normal",
@@ -522,14 +576,14 @@ export default function MainScreen({ registerData = null }) {
             </h2>
 
             {/* Logo ZYN con "by" como superíndice a la izquierda */}
-            <div className="relative mb-8 md:mb-12 flex justify-center items-center">
+            <div className="relative mb-4 md:mb-6 flex justify-center items-center">
               {/* "by" posicionado como superíndice a la izquierda superior */}
               <p
-                className="absolute -left-6 md:-left-9 lg:-left-12 -top-1.5 md:-top-2.25 lg:-top-3 text-[#001175] font-['Helvetica',sans-serif] text-[21.62px] font-bold leading-normal"
+                className="absolute -left-6 md:-left-9 lg:-left-12 -top-1.5 md:-top-2.25 lg:-top-3 text-[#001175] font-['Helvetica',sans-serif] text-[17.296px] font-bold leading-normal"
                 style={{
                   color: "#001175",
                   fontFamily: "Helvetica",
-                  fontSize: "21.62px",
+                  fontSize: "17.296px",
                   fontStyle: "normal",
                   fontWeight: 700,
                   lineHeight: "normal",
@@ -538,7 +592,7 @@ export default function MainScreen({ registerData = null }) {
                 by
               </p>
               {/* Logo ZYN */}
-              <div className="relative w-36 h-[72px] md:w-[168px] md:h-[84px] lg:w-48 lg:h-24">
+              <div className="relative w-[115.2px] h-[57.6px] md:w-[134.4px] md:h-[67.2px] lg:w-[153.6px] lg:h-[76.8px]">
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                   <img
                     alt="ZYN"
@@ -588,24 +642,26 @@ export default function MainScreen({ registerData = null }) {
               </div>
             </div>
 
-            {/* Botones ENVIAR y Continuar con Google en la misma fila */}
-            <div className="flex flex-row gap-3 md:gap-4 w-full max-w-xs md:max-w-sm mb-4 md:mb-6">
+            {/* Botones ENVIAR y Registrar con Google en columna */}
+            <div className="flex flex-col gap-2 w-full max-w-xs md:max-w-sm mb-2 md:mb-4 items-center">
               {/* Botón ENVIAR */}
               <button
                 type="submit"
                 disabled={loading}
-                className="relative bg-white rounded-[47.647px] px-6 md:px-8 lg:px-10 min-h-12 md:min-h-14 lg:min-h-[54px] font-['Helvetica',sans-serif] font-bold text-sm md:text-base lg:text-[23.824px] text-[#001175] cursor-pointer shadow-lg transition-all duration-150 select-none flex-1
+                className="relative bg-white rounded-[47.647px] px-6 md:px-8 lg:px-10 h-10 md:h-12 lg:h-14 font-['Helvetica',sans-serif] font-bold text-sm md:text-base lg:text-lg text-[#001175] cursor-pointer shadow-lg transition-all duration-150 select-none w-auto
                   hover:bg-[#001175] hover:text-white hover:shadow-2xl
                   active:scale-95 active:shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {loading ? "Guardando..." : "ENVIAR"}
               </button>
 
-              {/* Separador "O" */}
-              <div className="flex items-center justify-center px-2">
-                <span className="text-white text-sm md:text-base font-bold">
+              {/* Separador con línea */}
+              <div className="flex items-center justify-center gap-3 my-1">
+                <div className="flex-1 h-px bg-white/50"></div>
+                <span className="text-white text-sm md:text-base font-bold px-2">
                   O
                 </span>
+                <div className="flex-1 h-px bg-white/50"></div>
               </div>
 
               {/* Botón de Google Sign In */}
@@ -613,9 +669,9 @@ export default function MainScreen({ registerData = null }) {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="relative bg-white rounded-[47.647px] px-6 md:px-8 lg:px-10 min-h-12 md:min-h-14 lg:min-h-[54px] font-['Helvetica',sans-serif] font-bold text-xs md:text-sm lg:text-base text-[#001175] cursor-pointer shadow-lg transition-all duration-150 select-none flex-1
+                className="relative bg-white rounded-[47.647px] px-6 md:px-8 lg:px-10 h-10 md:h-12 lg:h-14 font-['Helvetica',sans-serif] font-bold text-xs md:text-sm lg:text-base text-[#001175] cursor-pointer shadow-lg transition-all duration-150 select-none w-auto
                   hover:bg-[#001175] hover:text-white hover:shadow-2xl
-                  active:scale-95 active:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed py-2"
+                  active:scale-95 active:shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   "Cargando..."
@@ -642,7 +698,7 @@ export default function MainScreen({ registerData = null }) {
                         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                       />
                     </svg>
-                    <span>Continuar con Google</span>
+                    <span>Registrar con Google</span>
                   </>
                 )}
               </button>
@@ -672,11 +728,11 @@ export default function MainScreen({ registerData = null }) {
         <div className="relative w-full max-w-2xl flex flex-col items-center justify-center">
           {/* Level Up */}
           <h2
-            className="text-[#001175] font-['Helvetica',sans-serif] text-[77.366px] font-bold leading-normal text-center mb-4 md:mb-6"
+            className="text-[#001175] font-['Helvetica',sans-serif] text-[61.8928px] font-bold leading-normal text-center mb-4 md:mb-6"
             style={{
               color: "#001175",
               fontFamily: "Helvetica",
-              fontSize: "77.366px",
+              fontSize: "61.8928px",
               fontStyle: "normal",
               fontWeight: 700,
               lineHeight: "normal",
@@ -689,11 +745,11 @@ export default function MainScreen({ registerData = null }) {
           <div className="relative mb-8 md:mb-12 flex justify-center items-center">
             {/* "by" posicionado como superíndice a la izquierda superior */}
             <p
-              className="absolute -left-8 md:-left-12 lg:-left-16 -top-2 md:-top-3 lg:-top-4 text-[#001175] font-['Helvetica',sans-serif] text-[28.833px] font-bold leading-normal"
+              className="absolute -left-8 md:-left-12 lg:-left-16 -top-2 md:-top-3 lg:-top-4 text-[#001175] font-['Helvetica',sans-serif] text-[23.0664px] font-bold leading-normal"
               style={{
                 color: "#001175",
                 fontFamily: "Helvetica",
-                fontSize: "28.833px",
+                fontSize: "23.0664px",
                 fontStyle: "normal",
                 fontWeight: 700,
                 lineHeight: "normal",
@@ -702,7 +758,7 @@ export default function MainScreen({ registerData = null }) {
               by
             </p>
             {/* Logo ZYN */}
-            <div className="relative w-48 h-24 md:w-56 md:h-28 lg:w-64 lg:h-32">
+            <div className="relative w-[153.6px] h-[76.8px] md:w-[179.2px] md:h-[89.6px] lg:w-[204.8px] lg:h-[102.4px]">
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <img
                   alt="ZYN"
