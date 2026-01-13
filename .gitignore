@@ -18,6 +18,9 @@ SECRET_KEY.txt
 .env.local
 .env.*.local
 
+# Scripts
+scripts/
+
 # Firebase credentials
 *-credentials.json
 *-firebase-adminsdk-*.json
