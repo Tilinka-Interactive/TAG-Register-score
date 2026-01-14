@@ -250,39 +250,38 @@ export default function RegisterScreen() {
           </div>
         </div>
       </div>
-      {validating && (
-        <div
+      {/* Footer de advertencia - 10% de la página - siempre visible durante la animación */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: "10vh",
+          minHeight: "60px",
+          backgroundColor: "#FFFFFF",
+          borderTop: "2px solid #000000",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 1rem",
+          zIndex: 99999,
+          boxShadow: "0 -4px 6px -1px rgba(0, 0, 0, 0.1)",
+        }}
+      >
+        <p
           style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "10vh",
-            minHeight: "60px",
-            backgroundColor: "#FFFFFF",
-            borderTop: "2px solid #000000",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "0 1rem",
-            zIndex: 99999,
-            boxShadow: "0 -4px 6px -1px rgba(0, 0, 0, 0.1)",
+            color: "#000000",
+            fontWeight: "bold",
+            fontSize: "0.75rem",
+            textAlign: "center",
+            maxWidth: "64rem",
           }}
         >
-          <p
-            style={{
-              color: "#000000",
-              fontWeight: "bold",
-              fontSize: "0.75rem",
-              textAlign: "center",
-              maxWidth: "64rem",
-            }}
-          >
-            Este producto no es libre de riegos y contiene nicotina, que es
-            adictiva, venta exclusiva para adultos.
-          </p>
-        </div>
-      )}
+          Este producto no es libre de riesgos y contiene nicotina, que es
+          adictiva, venta exclusiva para adultos.
+        </p>
+      </div>
     </div>
   );
 }

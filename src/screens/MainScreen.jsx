@@ -427,7 +427,7 @@ export default function MainScreen({ registerData = null }) {
               maxWidth: "64rem",
             }}
           >
-            Este producto no es libre de riegos y contiene nicotina, que es
+            Este producto no es libre de riesgos y contiene nicotina, que es
             adictiva, venta exclusiva para adultos.
           </p>
         </div>
@@ -820,7 +820,7 @@ export default function MainScreen({ registerData = null }) {
       {/* Footer de advertencia - 10% de la página */}
       <div className="fixed bottom-0 left-0 right-0 h-[10vh] min-h-[60px] bg-white border-t-2 border-black flex items-center justify-center px-4 z-[9999] shadow-lg">
         <p className="text-black font-bold text-xs md:text-sm text-center max-w-4xl">
-          Este producto no es libre de riegos y contiene nicotina, que es
+          Este producto no es libre de riesgos y contiene nicotina, que es
           adictiva, venta exclusiva para adultos.
         </p>
       </div>
