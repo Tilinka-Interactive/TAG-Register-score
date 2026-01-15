@@ -71,3 +71,84 @@ export const formatTiempoJuego = (segundos) => {
   }
 };
 
+/**
+ * Obtiene el top 3 de una fraternidad específica
+ * @param {string} fraternityChar - Carácter de la fraternidad (A-P)
+ * @returns {Promise} - Top 3 scores de la fraternidad
+ */
+export const getTopFraternity = async (fraternityChar) => {
+  try {
+    if (!fraternityChar) {
+      return { success: false, error: 'Carácter de fraternidad requerido', data: [] };
+    }
+
+    const fraternityUpper = fraternityChar.toUpperCase();
+    
+    // Obtener todos los scores con datos completos
+    const scoresRef = collection(db, 'scores');
+    const scoresSnapshot = await getDocs(scoresRef);
+    
+    const fraternityScores = [];
+    scoresSnapshot.forEach((doc) => {
+      const data = doc.data();
+      // Verificar que tenga datos completos (nombre y email) y que pertenezca a la fraternidad
+      if (data.nombre && data.email && data.avatarCode && data.score) {
+        const userFraternity = data.avatarCode.charAt(3)?.toUpperCase();
+        if (userFraternity === fraternityUpper) {
+          fraternityScores.push({
+            id: doc.id,
+            nombre: data.nombre,
+            email: data.email,
+            score: data.score || 0,
+            avatarCode: data.avatarCode,
+          });
+        }
+      }
+    });
+    
+    // Ordenar por score descendente y tomar top 3
+    fraternityScores.sort((a, b) => (b.score || 0) - (a.score || 0));
+    const top3 = fraternityScores.slice(0, 3);
+    
+    return { success: true, data: top3 };
+  } catch (error) {
+    console.error('Error al obtener top de fraternidad:', error);
+    return { success: false, error: error.message, data: [] };
+  }
+};
+
+/**
+ * Obtiene el top 3 general (de todas las fraternidades)
+ * @returns {Promise} - Top 3 scores globales
+ */
+export const getTopGeneral = async () => {
+  try {
+    // Obtener todos los scores con datos completos
+    const scoresRef = collection(db, 'scores');
+    const scoresSnapshot = await getDocs(scoresRef);
+    
+    const allScores = [];
+    scoresSnapshot.forEach((doc) => {
+      const data = doc.data();
+      // Verificar que tenga datos completos (nombre y email) y score
+      if (data.nombre && data.email && data.score) {
+        allScores.push({
+          id: doc.id,
+          nombre: data.nombre,
+          email: data.email,
+          score: data.score || 0,
+          avatarCode: data.avatarCode,
+        });
+      }
+    });
+    
+    // Ordenar por score descendente y tomar top 3
+    allScores.sort((a, b) => (b.score || 0) - (a.score || 0));
+    const top3 = allScores.slice(0, 3);
+    
+    return { success: true, data: top3 };
+  } catch (error) {
+    console.error('Error al obtener top general:', error);
+    return { success: false, error: error.message, data: [] };
+  }
+};

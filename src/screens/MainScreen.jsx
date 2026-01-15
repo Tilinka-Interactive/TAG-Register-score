@@ -5,12 +5,14 @@ import {
   saveUserScore,
 } from "../services/authService";
 import { saveRegisterData } from "../services/registerService";
+import { getTopFraternity } from "../services/scoreService";
 import {
   getAvatarPath,
   getFraternityColor,
   getFraternityFrame,
 } from "../utils/avatarUtils";
 import marcoGenerico from "../assets/Marco.png";
+import TopGeneralPopup from "../components/TopGeneralPopup";
 
 // Images - Local assets
 import zynLogoGrid from "../assets/zyn-logo-grid.png";
@@ -31,6 +33,10 @@ export default function MainScreen({ registerData = null }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [topFraternity, setTopFraternity] = useState([]);
+  const [loadingTopFraternity, setLoadingTopFraternity] = useState(false);
+  const [showTopGeneralPopup, setShowTopGeneralPopup] = useState(false);
+  const [savedRegisterData, setSavedRegisterData] = useState(registerData);
 
   // Observar cambios en autenticación
   useEffect(() => {
@@ -80,6 +86,34 @@ export default function MainScreen({ registerData = null }) {
     }
   }, [stage]);
 
+  // Cargar top de fraternidad cuando se entra a la pantalla de confirmación
+  useEffect(() => {
+    if (stage === "confirmation" && savedRegisterData?.avatarCode) {
+      const fraternityChar = savedRegisterData.avatarCode
+        .charAt(3)
+        ?.toUpperCase();
+      if (fraternityChar) {
+        loadTopFraternity(fraternityChar);
+      }
+    }
+  }, [stage, savedRegisterData]);
+
+  const loadTopFraternity = async (fraternityChar) => {
+    setLoadingTopFraternity(true);
+    try {
+      const result = await getTopFraternity(fraternityChar);
+      if (result.success) {
+        setTopFraternity(result.data);
+      } else {
+        console.error("Error al cargar top de fraternidad:", result.error);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoadingTopFraternity(false);
+    }
+  };
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (formData.nombre && formData.email) {
@@ -104,6 +138,16 @@ export default function MainScreen({ registerData = null }) {
         }
 
         if (result.success) {
+          // Guardar registerData antes de cambiar de stage
+          if (registerData) {
+            setSavedRegisterData(registerData);
+          } else if (result.data?.avatarCode) {
+            // Si no hay registerData pero se generó un avatarCode, crear un objeto similar
+            setSavedRegisterData({
+              avatarCode: result.data.avatarCode,
+              score: result.data.score || 0,
+            });
+          }
           setStage("confirmation");
         } else {
           alert("Error al guardar: " + result.error);
@@ -143,10 +187,23 @@ export default function MainScreen({ registerData = null }) {
         }
 
         if (scoreResult.success) {
+          // Guardar registerData antes de cambiar de stage
+          if (registerData) {
+            setSavedRegisterData(registerData);
+          } else if (scoreResult.data?.avatarCode) {
+            // Si no hay registerData pero se generó un avatarCode, crear un objeto similar
+            setSavedRegisterData({
+              avatarCode: scoreResult.data.avatarCode,
+              score: scoreResult.data.score || 0,
+            });
+          }
           setStage("confirmation");
         } else {
           // Aún así avanzar a confirmación si hay error al guardar
           console.error("Error al guardar score:", scoreResult.error);
+          if (registerData) {
+            setSavedRegisterData(registerData);
+          }
           setStage("confirmation");
         }
       } else {
@@ -427,7 +484,7 @@ export default function MainScreen({ registerData = null }) {
               maxWidth: "64rem",
             }}
           >
-            Este producto no es libre de riesgos y contiene nicotina, que es
+            Este producto no es libre de riesgo y contiene nicotina, que es
             adictiva, venta exclusiva para adultos.
           </p>
         </div>
@@ -779,13 +836,13 @@ export default function MainScreen({ registerData = null }) {
           </div>
 
           {/* Indicador de éxito "Enviado" - diseño destacado */}
-          <div className="relative flex flex-col items-center justify-center mt-8 md:mt-12">
-            <div className="relative bg-white rounded-full px-8 md:px-12 lg:px-16 py-4 md:py-6 lg:py-8 shadow-lg">
-              <div className="flex items-center gap-3 md:gap-4">
+          <div className="relative flex flex-col items-center justify-center mt-4 md:mt-6 mb-3 md:mb-4">
+            <div className="relative bg-white rounded-full px-6 md:px-8 lg:px-10 py-1.5 md:py-2 lg:py-2.5 shadow-lg">
+              <div className="flex items-center gap-2 md:gap-3">
                 {/* Checkmark grande */}
-                <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full bg-[#001175] flex items-center justify-center flex-shrink-0">
+                <div className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 rounded-full bg-[#001175] flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-white"
+                    className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-white"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -800,7 +857,7 @@ export default function MainScreen({ registerData = null }) {
                 </div>
                 {/* Texto "Enviado" */}
                 <p
-                  className="text-[#001175] font-['Helvetica',sans-serif] text-2xl md:text-3xl lg:text-4xl font-bold leading-normal"
+                  className="text-[#001175] font-['Helvetica',sans-serif] text-xl md:text-2xl lg:text-3xl font-bold leading-normal"
                   style={{
                     color: "#001175",
                     fontFamily: "Helvetica",
@@ -814,13 +871,318 @@ export default function MainScreen({ registerData = null }) {
               </div>
             </div>
           </div>
+
+          {/* Top de Fraternidad */}
+          {savedRegisterData?.avatarCode && (
+            <div className="w-full max-w-lg mb-6">
+              <div className="bg-white rounded-3xl p-4 md:p-6 shadow-lg">
+                <h3 className="text-xl md:text-2xl font-bold text-[#001175] text-center mb-4 font-['Helvetica',sans-serif]">
+                  Top de tu Fraternidad
+                </h3>
+                {loadingTopFraternity ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-600">Cargando...</p>
+                  </div>
+                ) : topFraternity.length === 0 ? (
+                  <p className="text-center text-gray-600 py-4">
+                    No hay puntuaciones disponibles aún.
+                  </p>
+                ) : (
+                  <div className="flex items-start justify-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 px-2 sm:px-4 py-4 md:py-6 w-full">
+                    {/* Segundo lugar - izquierda */}
+                    {topFraternity[1] &&
+                      (() => {
+                        const score = topFraternity[1];
+                        const fraternityColor = getFraternityColor(
+                          score.avatarCode || ""
+                        );
+                        const avatarPath = getAvatarPath(
+                          score.avatarCode || ""
+                        );
+                        const fraternityFrame = getFraternityFrame(
+                          score.avatarCode || ""
+                        );
+                        return (
+                          <div
+                            key={score.id || 1}
+                            className="flex-1 flex flex-col items-center min-w-0 px-1"
+                            style={{ marginTop: "20px" }}
+                          >
+                            <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center mb-2 flex-shrink-0">
+                              {/* Número top - esquina superior izquierda */}
+                              <div className="absolute -top-1 -left-1 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 flex items-center justify-center rounded-full bg-[#001175] text-white font-bold text-[10px] sm:text-xs md:text-sm z-30">
+                                2
+                              </div>
+                              {/* Marco genérico con color de fraternidad */}
+                              <div
+                                className="absolute inset-0 w-full h-full z-0"
+                                style={{
+                                  backgroundColor: fraternityColor,
+                                  maskImage: `url(${marcoGenerico})`,
+                                  WebkitMaskImage: `url(${marcoGenerico})`,
+                                  maskSize: "contain",
+                                  WebkitMaskSize: "contain",
+                                  maskRepeat: "no-repeat",
+                                  WebkitMaskRepeat: "no-repeat",
+                                  maskPosition: "center",
+                                  WebkitMaskPosition: "center",
+                                }}
+                              />
+                              {/* Marco de fraternidad azul */}
+                              <div
+                                className="absolute inset-0 w-4/5 h-4/5 z-10 m-auto"
+                                style={{
+                                  backgroundColor: "#001175",
+                                  maskImage: `url(${fraternityFrame})`,
+                                  WebkitMaskImage: `url(${fraternityFrame})`,
+                                  maskSize: "contain",
+                                  WebkitMaskSize: "contain",
+                                  maskRepeat: "no-repeat",
+                                  WebkitMaskRepeat: "no-repeat",
+                                  maskPosition: "center",
+                                  WebkitMaskPosition: "center",
+                                }}
+                              />
+                              {/* Avatar */}
+                              {avatarPath && (
+                                <img
+                                  src={avatarPath}
+                                  alt={`Avatar ${score.avatarCode}`}
+                                  className="relative z-20 w-[35.71%] h-[35.71%] object-contain"
+                                />
+                              )}
+                            </div>
+                            <p
+                              className="font-bold text-xs sm:text-sm md:text-base text-[#001175] text-center mb-1 w-full px-1"
+                              style={{
+                                wordBreak: "break-word",
+                                whiteSpace: "pre-line",
+                              }}
+                            >
+                              {(() => {
+                                const words = (
+                                  score.nombre || "Sin nombre"
+                                ).split(" ");
+                                const maxWords = 3;
+                                if (words.length <= maxWords) {
+                                  return words.join("\n");
+                                } else {
+                                  return words.slice(0, maxWords).join("\n");
+                                }
+                              })()}
+                            </p>
+                            <p className="font-bold text-sm sm:text-base md:text-lg text-[#001175] text-center">
+                              {score.score?.toLocaleString() || 0}
+                            </p>
+                          </div>
+                        );
+                      })()}
+
+                    {/* Primer lugar - centro (más grande) */}
+                    {topFraternity[0] &&
+                      (() => {
+                        const score = topFraternity[0];
+                        const fraternityColor = getFraternityColor(
+                          score.avatarCode || ""
+                        );
+                        const avatarPath = getAvatarPath(
+                          score.avatarCode || ""
+                        );
+                        const fraternityFrame = getFraternityFrame(
+                          score.avatarCode || ""
+                        );
+                        return (
+                          <div
+                            key={score.id || 0}
+                            className="flex flex-col items-center min-w-0 px-1 sm:px-2"
+                            style={{ marginTop: "0px" }}
+                          >
+                            <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full flex items-center justify-center mb-2 flex-shrink-0">
+                              {/* Número top - esquina superior izquierda */}
+                              <div className="absolute -top-1 -left-1 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 flex items-center justify-center rounded-full bg-[#001175] text-white font-bold text-xs sm:text-sm md:text-base z-30">
+                                1
+                              </div>
+                              {/* Marco genérico con color de fraternidad */}
+                              <div
+                                className="absolute inset-0 w-full h-full z-0"
+                                style={{
+                                  backgroundColor: fraternityColor,
+                                  maskImage: `url(${marcoGenerico})`,
+                                  WebkitMaskImage: `url(${marcoGenerico})`,
+                                  maskSize: "contain",
+                                  WebkitMaskSize: "contain",
+                                  maskRepeat: "no-repeat",
+                                  WebkitMaskRepeat: "no-repeat",
+                                  maskPosition: "center",
+                                  WebkitMaskPosition: "center",
+                                }}
+                              />
+                              {/* Marco de fraternidad azul */}
+                              <div
+                                className="absolute inset-0 w-4/5 h-4/5 z-10 m-auto"
+                                style={{
+                                  backgroundColor: "#001175",
+                                  maskImage: `url(${fraternityFrame})`,
+                                  WebkitMaskImage: `url(${fraternityFrame})`,
+                                  maskSize: "contain",
+                                  WebkitMaskSize: "contain",
+                                  maskRepeat: "no-repeat",
+                                  WebkitMaskRepeat: "no-repeat",
+                                  maskPosition: "center",
+                                  WebkitMaskPosition: "center",
+                                }}
+                              />
+                              {/* Avatar */}
+                              {avatarPath && (
+                                <img
+                                  src={avatarPath}
+                                  alt={`Avatar ${score.avatarCode}`}
+                                  className="relative z-20 w-[35.71%] h-[35.71%] object-contain"
+                                />
+                              )}
+                            </div>
+                            <p
+                              className="font-bold text-sm sm:text-base md:text-lg text-[#001175] text-center mb-1 w-full px-1"
+                              style={{
+                                wordBreak: "break-word",
+                                whiteSpace: "pre-line",
+                              }}
+                            >
+                              {(() => {
+                                const words = (
+                                  score.nombre || "Sin nombre"
+                                ).split(" ");
+                                const maxWords = 3;
+                                if (words.length <= maxWords) {
+                                  return words.join("\n");
+                                } else {
+                                  return words.slice(0, maxWords).join("\n");
+                                }
+                              })()}
+                            </p>
+                            <p className="font-bold text-base sm:text-lg md:text-xl text-[#001175] text-center">
+                              {score.score?.toLocaleString() || 0}
+                            </p>
+                          </div>
+                        );
+                      })()}
+
+                    {/* Tercer lugar - derecha */}
+                    {topFraternity[2] &&
+                      (() => {
+                        const score = topFraternity[2];
+                        const fraternityColor = getFraternityColor(
+                          score.avatarCode || ""
+                        );
+                        const avatarPath = getAvatarPath(
+                          score.avatarCode || ""
+                        );
+                        const fraternityFrame = getFraternityFrame(
+                          score.avatarCode || ""
+                        );
+                        return (
+                          <div
+                            key={score.id || 2}
+                            className="flex-1 flex flex-col items-center min-w-0 px-1"
+                            style={{ marginTop: "40px" }}
+                          >
+                            <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center mb-2 flex-shrink-0">
+                              {/* Número top - esquina superior izquierda */}
+                              <div className="absolute -top-1 -left-1 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 flex items-center justify-center rounded-full bg-[#001175] text-white font-bold text-[10px] sm:text-xs md:text-sm z-30">
+                                3
+                              </div>
+                              {/* Marco genérico con color de fraternidad */}
+                              <div
+                                className="absolute inset-0 w-full h-full z-0"
+                                style={{
+                                  backgroundColor: fraternityColor,
+                                  maskImage: `url(${marcoGenerico})`,
+                                  WebkitMaskImage: `url(${marcoGenerico})`,
+                                  maskSize: "contain",
+                                  WebkitMaskSize: "contain",
+                                  maskRepeat: "no-repeat",
+                                  WebkitMaskRepeat: "no-repeat",
+                                  maskPosition: "center",
+                                  WebkitMaskPosition: "center",
+                                }}
+                              />
+                              {/* Marco de fraternidad azul */}
+                              <div
+                                className="absolute inset-0 w-4/5 h-4/5 z-10 m-auto"
+                                style={{
+                                  backgroundColor: "#001175",
+                                  maskImage: `url(${fraternityFrame})`,
+                                  WebkitMaskImage: `url(${fraternityFrame})`,
+                                  maskSize: "contain",
+                                  WebkitMaskSize: "contain",
+                                  maskRepeat: "no-repeat",
+                                  WebkitMaskRepeat: "no-repeat",
+                                  maskPosition: "center",
+                                  WebkitMaskPosition: "center",
+                                }}
+                              />
+                              {/* Avatar */}
+                              {avatarPath && (
+                                <img
+                                  src={avatarPath}
+                                  alt={`Avatar ${score.avatarCode}`}
+                                  className="relative z-20 w-[35.71%] h-[35.71%] object-contain"
+                                />
+                              )}
+                            </div>
+                            <p
+                              className="font-bold text-xs sm:text-sm md:text-base text-[#001175] text-center mb-1 w-full px-1"
+                              style={{
+                                wordBreak: "break-word",
+                                whiteSpace: "pre-line",
+                              }}
+                            >
+                              {(() => {
+                                const words = (
+                                  score.nombre || "Sin nombre"
+                                ).split(" ");
+                                const maxWords = 3;
+                                if (words.length <= maxWords) {
+                                  return words.join("\n");
+                                } else {
+                                  return words.slice(0, maxWords).join("\n");
+                                }
+                              })()}
+                            </p>
+                            <p className="font-bold text-sm sm:text-base md:text-lg text-[#001175] text-center">
+                              {score.score?.toLocaleString() || 0}
+                            </p>
+                          </div>
+                        );
+                      })()}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Botón para ver Top General - Parte superior derecha */}
+          <button
+            onClick={() => setShowTopGeneralPopup(true)}
+            className="fixed top-4 right-4 md:top-6 md:right-6 z-20 bg-white rounded-[47.647px] px-4 md:px-6 lg:px-8 h-9 md:h-10 lg:h-11 font-['Helvetica',sans-serif] font-bold text-xs md:text-sm lg:text-base text-[#001175] cursor-pointer shadow-lg transition-all duration-150 select-none
+              hover:bg-[#001175] hover:text-white hover:shadow-2xl
+              active:scale-95 active:shadow-md flex items-center justify-center"
+          >
+            Ver Top General
+          </button>
         </div>
       </div>
+
+      {/* Popup del Top General */}
+      <TopGeneralPopup
+        isOpen={showTopGeneralPopup}
+        onClose={() => setShowTopGeneralPopup(false)}
+      />
 
       {/* Footer de advertencia - 10% de la página */}
       <div className="fixed bottom-0 left-0 right-0 h-[10vh] min-h-[60px] bg-white border-t-2 border-black flex items-center justify-center px-4 z-[9999] shadow-lg">
         <p className="text-black font-bold text-xs md:text-sm text-center max-w-4xl">
-          Este producto no es libre de riesgos y contiene nicotina, que es
+          Este producto no es libre de riesgo y contiene nicotina, que es
           adictiva, venta exclusiva para adultos.
         </p>
       </div>

@@ -278,7 +278,7 @@ export default function RegisterScreen() {
             maxWidth: "64rem",
           }}
         >
-          Este producto no es libre de riesgos y contiene nicotina, que es
+          Este producto no es libre de riesgo y contiene nicotina, que es
           adictiva, venta exclusiva para adultos.
         </p>
       </div>
