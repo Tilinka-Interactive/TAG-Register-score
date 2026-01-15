@@ -4,6 +4,43 @@ import { getBestScoresByUser, formatTiempoJuego } from "../services/scoreService
 import { getAvatarPath, getFraternityColor, getFraternityFrame } from "../utils/avatarUtils";
 import zynLogoForm from "../assets/zyn-logo-form.png";
 
+// Mapeo de letras a nombres de fraternidades
+const FRATERNIDADES_MAP = {
+  'A': 'MOSQUETEROS',
+  'B': 'FASTIDIADOS',
+  'C': 'CODICIADOS',
+  'D': 'FACHADAZOS',
+  'E': 'TAITAS TAITAS',
+  'F': 'CAMBAS FLOJONAZOS',
+  'G': 'DESDICHADOS',
+  'H': 'PRETENCIOSOS',
+  'I': 'OSTENTADOS',
+  'J': 'DENEGADOS',
+  'K': 'PRESTIGIADOS',
+  'L': 'FLOJONAZOS',
+  'M': 'SOCIOS JR',
+  'N': 'ENVIDIADOS',
+  'O': 'JAREROS',
+  'P': 'FRAT MORE'
+};
+
+// Obtener la letra de la fraternidad del avatarCode (cuarto carácter: A-P)
+const getFraternityLetterFromAvatarCode = (avatarCode) => {
+  if (!avatarCode || avatarCode.length < 4) {
+    return null;
+  }
+  return avatarCode.charAt(3).toUpperCase();
+};
+
+// Obtener el nombre de la fraternidad del avatarCode
+const getFraternityNameFromAvatarCode = (avatarCode) => {
+  const letter = getFraternityLetterFromAvatarCode(avatarCode);
+  return letter && FRATERNIDADES_MAP[letter] ? FRATERNIDADES_MAP[letter] : null;
+};
+
+// Lista de fraternidades válidas (A-P)
+const FRATERNIDADES_LETTERS = Object.keys(FRATERNIDADES_MAP);
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [scores, setScores] = useState([]);
@@ -36,9 +73,13 @@ export default function Dashboard() {
       if (result.success) {
         setScores(result.data);
         
-        // Extraer fraternidades únicas
-        const uniqueFraternidades = [...new Set(result.data.map(s => s.fraternidad).filter(Boolean))];
-        setFraternidades(uniqueFraternidades.sort());
+        // Extraer fraternidades únicas basadas en avatarCode (A-P)
+        const uniqueFraternidades = [...new Set(
+          result.data
+            .map(s => getFraternityNameFromAvatarCode(s.avatarCode))
+            .filter(f => f)
+        )].sort();
+        setFraternidades(uniqueFraternidades);
         
         // Calcular estadísticas
         calculateStats(result.data);
@@ -51,16 +92,43 @@ export default function Dashboard() {
   };
 
   const calculateStats = (data) => {
-    if (data.length === 0) return;
+    if (data.length === 0) {
+      setStats({
+        totalUsuarios: 0,
+        promedioScore: 0,
+        scoreMaximo: 0,
+        scoreMinimo: 0,
+        totalFraternidades: 0,
+      });
+      return;
+    }
     
-    const scoresList = data.map(s => s.score);
-    const uniqueFraternidades = new Set(data.map(s => s.fraternidad).filter(Boolean));
+    // Filtrar scores válidos (solo números)
+    const scoresList = data
+      .map(s => s.score)
+      .filter(score => typeof score === 'number' && !isNaN(score) && score !== null && score !== undefined);
+    
+    const uniqueFraternidades = new Set(
+      data
+        .map(s => getFraternityNameFromAvatarCode(s.avatarCode))
+        .filter(f => f)
+    );
+    
+    let promedioScore = 0;
+    let scoreMaximo = 0;
+    let scoreMinimo = 0;
+    
+    if (scoresList.length > 0) {
+      promedioScore = Math.round(scoresList.reduce((a, b) => a + b, 0) / scoresList.length);
+      scoreMaximo = Math.max(...scoresList);
+      scoreMinimo = Math.min(...scoresList);
+    }
     
     setStats({
       totalUsuarios: data.length,
-      promedioScore: Math.round(scoresList.reduce((a, b) => a + b, 0) / scoresList.length),
-      scoreMaximo: Math.max(...scoresList),
-      scoreMinimo: Math.min(...scoresList),
+      promedioScore: promedioScore || 0,
+      scoreMaximo: scoreMaximo || 0,
+      scoreMinimo: scoreMinimo || 0,
       totalFraternidades: uniqueFraternidades.size,
     });
   };
@@ -68,11 +136,12 @@ export default function Dashboard() {
   const applyFiltersAndSort = () => {
     let filtered = [...scores];
     
-    // Filtrar por fraternidad
+    // Filtrar por fraternidad (basado en avatarCode)
     if (filterFraternidad) {
-      filtered = filtered.filter(s => 
-        s.fraternidad?.toLowerCase().includes(filterFraternidad.toLowerCase())
-      );
+      filtered = filtered.filter(s => {
+        const fraternity = getFraternityNameFromAvatarCode(s.avatarCode);
+        return fraternity === filterFraternidad;
+      });
     }
     
     // Ordenar
@@ -89,8 +158,8 @@ export default function Dashboard() {
           bValue = b.tiempoJuego || 0;
           break;
         case "fraternidad":
-          aValue = (a.fraternidad || "").toLowerCase();
-          bValue = (b.fraternidad || "").toLowerCase();
+          aValue = (getFraternityNameFromAvatarCode(a.avatarCode) || "").toLowerCase();
+          bValue = (getFraternityNameFromAvatarCode(b.avatarCode) || "").toLowerCase();
           break;
         default:
           aValue = a.score || 0;
@@ -254,7 +323,9 @@ export default function Dashboard() {
                       <td className="px-4 py-3 text-[#001175] font-bold">{index + 1}</td>
                       <td className="px-4 py-3 text-[#001175] font-bold">{score.nombre || "N/A"}</td>
                       <td className="px-4 py-3 text-[#898d90] text-sm">{score.email || "N/A"}</td>
-                      <td className="px-4 py-3 text-[#001175] font-bold">{score.fraternidad || "N/A"}</td>
+                      <td className="px-4 py-3 text-[#001175] font-bold">
+                        {getFraternityNameFromAvatarCode(score.avatarCode) || "N/A"}
+                      </td>
                       <td className="px-4 py-3 text-[#001175] font-bold text-lg">{score.score || 0}</td>
                       <td className="px-4 py-3 text-[#898d90]">{formatTiempoJuego(score.tiempoJuego)}</td>
                       <td className="px-4 py-3">
@@ -311,49 +382,15 @@ export default function Dashboard() {
 
         {/* Gráficas recomendadas */}
         <div className="mt-6 md:mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Gráfica de distribución de scores */}
-          <div className="bg-white rounded-lg p-4 md:p-6 shadow-lg">
-            <h2 className="text-[#001175] font-bold text-lg md:text-xl mb-4">
-              Distribución de Scores
-            </h2>
-            <div className="space-y-2">
-              {[100, 300, 500, 700, 900].map((threshold) => {
-                const count = filteredScores.filter(
-                  (s) => s.score >= threshold && s.score < threshold + 200
-                ).length;
-                const percentage = filteredScores.length > 0 
-                  ? (count / filteredScores.length) * 100 
-                  : 0;
-                
-                return (
-                  <div key={threshold} className="flex items-center gap-2">
-                    <span className="text-[#001175] font-bold text-sm w-20">
-                      {threshold}-{threshold + 199}
-                    </span>
-                    <div className="flex-1 bg-[#00a9df]/20 rounded-full h-6 relative overflow-hidden">
-                      <div
-                        className="bg-[#001175] h-full rounded-full transition-all duration-300"
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                    <span className="text-[#898d90] font-bold text-sm w-12 text-right">
-                      {count}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Gráfica de fraternidades */}
           <div className="bg-white rounded-lg p-4 md:p-6 shadow-lg">
             <h2 className="text-[#001175] font-bold text-lg md:text-xl mb-4">
               Scores por Fraternidad
             </h2>
             <div className="space-y-3 max-h-64 overflow-y-auto">
-              {fraternidades.slice(0, 10).map((fraternidad) => {
+              {fraternidades.slice(0, 8).map((fraternidad) => {
                 const fraternidadScores = filteredScores.filter(
-                  (s) => s.fraternidad === fraternidad
+                  (s) => getFraternityNameFromAvatarCode(s.avatarCode) === fraternidad
                 );
                 const promedio = fraternidadScores.length > 0
                   ? Math.round(
@@ -422,7 +459,7 @@ export default function Dashboard() {
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {fraternidades.slice(0, 8).map((fraternidad) => {
                 const fraternidadScores = filteredScores.filter(
-                  (s) => s.fraternidad === fraternidad
+                  (s) => getFraternityNameFromAvatarCode(s.avatarCode) === fraternidad
                 );
                 const tiempoPromedio = fraternidadScores.length > 0
                   ? Math.round(

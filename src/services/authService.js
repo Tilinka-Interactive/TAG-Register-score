@@ -162,14 +162,37 @@ export const saveUserScore = async (userData) => {
     const scoreRef = await addDoc(collection(db, 'scores'), scoreData);
     console.log('✅ Guardado exitosamente en Firestore. ID del documento:', scoreRef.id);
 
-    // Si hay usuario autenticado, también actualizar el documento del usuario
+    // Guardar o actualizar en la colección 'users'
+    // Si hay usuario autenticado, usar su UID, si no, usar el email como identificador
+    const userId = user ? user.uid : userData.email;
+    const userRef = doc(db, 'users', userId);
+    
+    const userDoc = await getDoc(userRef);
+    const userDataToSave = {
+      email: userData.email,
+      nombre: userData.nombre,
+      lastScore: score,
+      lastAvatarCode: avatarCode,
+      lastScoreDate: horaFin,
+      updatedAt: new Date().toISOString(),
+      registrationMethod: user ? 'google' : 'manual'
+    };
+
     if (user) {
-      const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, {
-        lastScore: score,
-        lastAvatarCode: avatarCode,
-        lastScoreDate: horaFin
-      }, { merge: true });
+      // Si hay usuario autenticado, agregar datos adicionales
+      userDataToSave.uid = user.uid;
+      userDataToSave.displayName = user.displayName;
+      userDataToSave.photoURL = user.photoURL;
+    }
+
+    if (!userDoc.exists()) {
+      // Crear nuevo documento de usuario
+      userDataToSave.createdAt = new Date().toISOString();
+      await setDoc(userRef, userDataToSave);
+      console.log('✅ Usuario creado en Firestore. Colección: users');
+    } else {
+      // Actualizar documento existente
+      await setDoc(userRef, userDataToSave, { merge: true });
       console.log('✅ Usuario actualizado en Firestore. Colección: users');
     }
 

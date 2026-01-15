@@ -120,6 +120,31 @@ export const saveRegisterData = async (registerData, userData) => {
       registrationMethod: 'url'
     }, { merge: true }); // merge: true para actualizar sin sobrescribir campos existentes
 
+    // Guardar o actualizar en la colección 'users' usando el email como identificador
+    const userRef = doc(db, 'users', email);
+    const userDoc = await getDoc(userRef);
+    
+    const userDataToSave = {
+      email: email,
+      nombre: nombre,
+      lastScore: score,
+      lastAvatarCode: avatarCode,
+      lastScoreDate: horaFin,
+      updatedAt: new Date().toISOString(),
+      registrationMethod: 'url'
+    };
+
+    if (!userDoc.exists()) {
+      // Crear nuevo documento de usuario
+      userDataToSave.createdAt = new Date().toISOString();
+      await setDoc(userRef, userDataToSave);
+      console.log('✅ Usuario creado en Firestore. Colección: users');
+    } else {
+      // Actualizar documento existente
+      await setDoc(userRef, userDataToSave, { merge: true });
+      console.log('✅ Usuario actualizado en Firestore. Colección: users');
+    }
+
     return {
       success: true,
       scoreId: id,
