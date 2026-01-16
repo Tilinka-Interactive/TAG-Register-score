@@ -1,6 +1,6 @@
 /**
- * Script alternativo para crear documentos vacíos en la colección 'scores' de Firestore
- * Usa Firebase CLI en lugar de Admin SDK (más lento pero no requiere credenciales de servicio)
+ * Script para crear documentos vacíos en la colección 'scores' de Firestore
+ * Usa Firebase Admin SDK
  *
  * Uso:
  *   node scripts/create-empty-scores-cli.js [cantidad]
@@ -9,11 +9,19 @@
  *   node scripts/create-empty-scores-cli.js 10
  *
  * Requiere:
- * - Firebase CLI instalado y autenticado (firebase login)
- * - Proyecto configurado (firebase use zyn-tag)
+ * - firebase-admin instalado: npm install firebase-admin
+ * - Archivo de credenciales: zyn-tag-credentials.json en la raíz del proyecto
  */
 
-const { execSync } = require("child_process");
+let admin;
+try {
+  admin = require("firebase-admin");
+} catch (error) {
+  console.error("❌ Error: firebase-admin no está instalado");
+  console.log("   Instala firebase-admin: npm install firebase-admin");
+  process.exit(1);
+}
+
 const fs = require("fs");
 const path = require("path");
 
@@ -31,30 +39,49 @@ function generateScoreId() {
 }
 
 /**
- * Crea un documento vacío usando Firebase CLI
+ * Inicializa Firebase Admin SDK
  */
-function createScoreDocument(scoreId) {
-  const data = {
-    createdAt: new Date().toISOString(),
-  };
+function initializeFirebase() {
+  if (admin.apps.length === 0) {
+    const credentialsPath = path.join(
+      __dirname,
+      "..",
+      "zyn-tag-credentials.json"
+    );
 
-  // Crear un archivo temporal con los datos
-  const tempFile = path.join(__dirname, `temp-${scoreId}.json`);
-  fs.writeFileSync(tempFile, JSON.stringify(data, null, 2));
+    if (!fs.existsSync(credentialsPath)) {
+      throw new Error(
+        `❌ No se encontró el archivo de credenciales: ${credentialsPath}\n` +
+          "   Asegúrate de tener el archivo zyn-tag-credentials.json en la raíz del proyecto."
+      );
+    }
 
+    const serviceAccount = require(credentialsPath);
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+
+    console.log("✅ Firebase Admin SDK inicializado\n");
+  }
+
+  return admin.firestore();
+}
+
+/**
+ * Crea un documento vacío usando Firebase Admin SDK
+ */
+async function createScoreDocument(db, scoreId) {
   try {
-    // Usar Firebase CLI para crear el documento
-    const command = `firebase firestore:set scores/${scoreId} ${tempFile} --project zyn-tag`;
-    execSync(command, { stdio: "inherit" });
+    const data = {
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    await db.collection("scores").doc(scoreId).set(data);
     return true;
   } catch (error) {
     console.error(`Error al crear documento ${scoreId}:`, error.message);
     return false;
-  } finally {
-    // Eliminar archivo temporal
-    if (fs.existsSync(tempFile)) {
-      fs.unlinkSync(tempFile);
-    }
   }
 }
 
@@ -67,35 +94,66 @@ async function createEmptyScores(count = 10) {
       `\n🔄 Creando ${count} documentos vacíos en la colección 'scores'...\n`
     );
 
-    // Verificar que Firebase CLI esté configurado
-    try {
-      execSync("firebase --version", { stdio: "pipe" });
-    } catch (error) {
-      console.error("❌ Error: Firebase CLI no está instalado");
-      console.log("   Instala Firebase CLI: npm install -g firebase-tools");
-      process.exit(1);
-    }
+    // Inicializar Firebase Admin SDK
+    const db = initializeFirebase();
 
     const createdScores = [];
     let successCount = 0;
     let failCount = 0;
 
-    console.log("⏳ Creando documentos (esto puede tardar un momento)...\n");
+    console.log("⏳ Creando documentos...\n");
 
-    // Crear documentos uno por uno (Firebase CLI no soporta batch)
+    // Crear documentos usando batch para mejor rendimiento
+    const batchSize = 500; // Firestore permite máximo 500 operaciones por batch
+    const batches = [];
+    let currentBatch = db.batch();
+    let batchCount = 0;
+    const scoreIds = [];
+
+    // Generar todos los IDs primero
     for (let i = 0; i < count; i++) {
-      const scoreId = generateScoreId();
-      process.stdout.write(`  [${i + 1}/${count}] Creando ${scoreId}... `);
+      scoreIds.push(generateScoreId());
+    }
 
-      if (createScoreDocument(scoreId)) {
-        createdScores.push(scoreId);
-        successCount++;
-        console.log("✅");
-      } else {
-        failCount++;
-        console.log("❌");
+    // Preparar batches
+    for (let i = 0; i < scoreIds.length; i++) {
+      const scoreId = scoreIds[i];
+      const docRef = db.collection("scores").doc(scoreId);
+      currentBatch.set(docRef, {
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      batchCount++;
+
+      // Si el batch está lleno o es el último, agregarlo a la lista
+      if (batchCount >= batchSize || i === scoreIds.length - 1) {
+        batches.push({ batch: currentBatch, count: batchCount });
+        currentBatch = db.batch();
+        batchCount = 0;
       }
     }
+
+    // Ejecutar todos los batches
+    console.log("⏳ Guardando en Firestore...\n");
+    for (let i = 0; i < batches.length; i++) {
+      try {
+        await batches[i].batch.commit();
+        const batchSuccessCount = batches[i].count;
+        successCount += batchSuccessCount;
+        console.log(
+          `  ✅ Batch ${i + 1}/${
+            batches.length
+          } guardado (${batchSuccessCount} documentos)`
+        );
+      } catch (error) {
+        const batchFailCount = batches[i].count;
+        failCount += batchFailCount;
+        console.error(`  ❌ Error en batch ${i + 1}:`, error.message);
+      }
+    }
+
+    // Agregar todos los IDs generados a createdScores
+    createdScores.push(...scoreIds);
 
     // Mostrar resultados
     console.log("\n" + "=".repeat(60));
@@ -126,11 +184,7 @@ async function createEmptyScores(count = 10) {
       };
 
       try {
-        fs.writeFileSync(
-          filepath,
-          JSON.stringify(outputData, null, 2),
-          "utf8"
-        );
+        fs.writeFileSync(filepath, JSON.stringify(outputData, null, 2), "utf8");
         console.log(`\n💾 IDs guardados en: ${filename}`);
         console.log(`   Ruta completa: ${filepath}\n`);
       } catch (fileError) {

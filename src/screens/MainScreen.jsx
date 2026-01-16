@@ -121,14 +121,23 @@ export default function MainScreen({ registerData = null }) {
       try {
         let result;
 
-        // Si hay registerData (viene de URL), usar saveRegisterData
-        if (registerData) {
+        // Verificar si registerData es válido (tiene todos los campos necesarios)
+        const hasValidRegisterData =
+          registerData &&
+          registerData.id &&
+          registerData.avatarCode &&
+          registerData.score !== undefined &&
+          registerData.horaIni &&
+          registerData.horaFin;
+
+        // Si hay registerData válido (viene de URL válida), usar saveRegisterData
+        if (hasValidRegisterData) {
           result = await saveRegisterData(registerData, {
             nombre: formData.nombre,
             email: formData.email,
           });
         } else {
-          // Si no hay registerData, usar saveUserScore (comportamiento original)
+          // Si no hay registerData válido, usar saveUserScore (comportamiento original)
           const horaInicio = new Date().toISOString();
           result = await saveUserScore({
             nombre: formData.nombre,
@@ -139,7 +148,7 @@ export default function MainScreen({ registerData = null }) {
 
         if (result.success) {
           // Guardar registerData antes de cambiar de stage
-          if (registerData) {
+          if (hasValidRegisterData) {
             setSavedRegisterData(registerData);
           } else if (result.data?.avatarCode) {
             // Si no hay registerData pero se generó un avatarCode, crear un objeto similar
@@ -154,7 +163,8 @@ export default function MainScreen({ registerData = null }) {
         }
       } catch (error) {
         console.error("Error:", error);
-        alert("Error al procesar el registro");
+        console.error("Detalles del error:", error);
+        alert("Error al procesar el registro: " + (error.message || error));
       } finally {
         setLoading(false);
       }

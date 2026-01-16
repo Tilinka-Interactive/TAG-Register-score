@@ -118,7 +118,14 @@ export const generateFraternidad = () => {
  */
 export const saveUserScore = async (userData) => {
   try {
+    // Validar datos de entrada
+    if (!userData || !userData.email || !userData.nombre) {
+      throw new Error('Datos de usuario incompletos. Se requiere email y nombre.');
+    }
+
     const user = auth.currentUser;
+    console.log('🔍 Usuario actual:', user ? `Autenticado (${user.email})` : 'No autenticado');
+    console.log('📝 Datos recibidos:', { email: userData.email, nombre: userData.nombre });
     
     // Generar puntaje aleatorio entre 100 y 1000
     const score = Math.floor(Math.random() * 901) + 100;
@@ -158,42 +165,53 @@ export const saveUserScore = async (userData) => {
     }
 
     // Guardar en la colección 'scores' de Firestore Database
-    console.log('Guardando en Firestore Database - Colección: scores', scoreData);
-    const scoreRef = await addDoc(collection(db, 'scores'), scoreData);
-    console.log('✅ Guardado exitosamente en Firestore. ID del documento:', scoreRef.id);
+    console.log('💾 Guardando en Firestore Database - Colección: scores', scoreData);
+    try {
+      const scoreRef = await addDoc(collection(db, 'scores'), scoreData);
+      console.log('✅ Guardado exitosamente en Firestore. ID del documento:', scoreRef.id);
+    } catch (scoreError) {
+      console.error('❌ Error al guardar en colección scores:', scoreError);
+      throw new Error(`Error al guardar score: ${scoreError.message || scoreError.code || 'Error desconocido'}`);
+    }
 
     // Guardar o actualizar en la colección 'users'
     // Si hay usuario autenticado, usar su UID, si no, usar el email como identificador
     const userId = user ? user.uid : userData.email;
     const userRef = doc(db, 'users', userId);
     
-    const userDoc = await getDoc(userRef);
-    const userDataToSave = {
-      email: userData.email,
-      nombre: userData.nombre,
-      lastScore: score,
-      lastAvatarCode: avatarCode,
-      lastScoreDate: horaFin,
-      updatedAt: new Date().toISOString(),
-      registrationMethod: user ? 'google' : 'manual'
-    };
+    console.log('👤 Actualizando/creando usuario en colección users. ID:', userId);
+    try {
+      const userDoc = await getDoc(userRef);
+      const userDataToSave = {
+        email: userData.email,
+        nombre: userData.nombre,
+        lastScore: score,
+        lastAvatarCode: avatarCode,
+        lastScoreDate: horaFin,
+        updatedAt: new Date().toISOString(),
+        registrationMethod: user ? 'google' : 'manual'
+      };
 
-    if (user) {
-      // Si hay usuario autenticado, agregar datos adicionales
-      userDataToSave.uid = user.uid;
-      userDataToSave.displayName = user.displayName;
-      userDataToSave.photoURL = user.photoURL;
-    }
+      if (user) {
+        // Si hay usuario autenticado, agregar datos adicionales
+        userDataToSave.uid = user.uid;
+        userDataToSave.displayName = user.displayName;
+        userDataToSave.photoURL = user.photoURL;
+      }
 
-    if (!userDoc.exists()) {
-      // Crear nuevo documento de usuario
-      userDataToSave.createdAt = new Date().toISOString();
-      await setDoc(userRef, userDataToSave);
-      console.log('✅ Usuario creado en Firestore. Colección: users');
-    } else {
-      // Actualizar documento existente
-      await setDoc(userRef, userDataToSave, { merge: true });
-      console.log('✅ Usuario actualizado en Firestore. Colección: users');
+      if (!userDoc.exists()) {
+        // Crear nuevo documento de usuario
+        userDataToSave.createdAt = new Date().toISOString();
+        await setDoc(userRef, userDataToSave);
+        console.log('✅ Usuario creado en Firestore. Colección: users');
+      } else {
+        // Actualizar documento existente
+        await setDoc(userRef, userDataToSave, { merge: true });
+        console.log('✅ Usuario actualizado en Firestore. Colección: users');
+      }
+    } catch (userError) {
+      console.error('❌ Error al guardar en colección users:', userError);
+      throw new Error(`Error al guardar usuario: ${userError.message || userError.code || 'Error desconocido'}`);
     }
 
     return {
