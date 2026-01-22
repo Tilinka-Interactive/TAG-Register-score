@@ -73,7 +73,7 @@ export const formatTiempoJuego = (segundos) => {
 
 /**
  * Obtiene el top 3 de una fraternidad específica
- * @param {string} fraternityChar - Carácter de la fraternidad (A-P)
+ * @param {string} fraternityChar - Carácter de la fraternidad (A-R)
  * @returns {Promise} - Top 3 scores de la fraternidad
  */
 export const getTopFraternity = async (fraternityChar) => {

@@ -21,10 +21,12 @@ const FRATERNIDADES_MAP = {
   'M': 'SOCIOS JR',
   'N': 'ENVIDIADOS',
   'O': 'JAREROS',
-  'P': 'FRAT MORE'
+  'P': 'FRAT MORE',
+  'Q': 'PICAFLORES',
+  'R': 'AUDACES'
 };
 
-// Obtener la letra de la fraternidad del avatarCode (cuarto carácter: A-P)
+// Obtener la letra de la fraternidad del avatarCode (cuarto carácter: A-R)
 const getFraternityLetterFromAvatarCode = (avatarCode) => {
   if (!avatarCode || avatarCode.length < 4) {
     return null;
@@ -38,7 +40,7 @@ const getFraternityNameFromAvatarCode = (avatarCode) => {
   return letter && FRATERNIDADES_MAP[letter] ? FRATERNIDADES_MAP[letter] : null;
 };
 
-// Lista de fraternidades válidas (A-P)
+// Lista de fraternidades válidas (A-R)
 const FRATERNIDADES_LETTERS = Object.keys(FRATERNIDADES_MAP);
 
 export default function Dashboard() {
@@ -73,7 +75,7 @@ export default function Dashboard() {
       if (result.success) {
         setScores(result.data);
         
-        // Extraer fraternidades únicas basadas en avatarCode (A-P)
+        // Extraer fraternidades únicas basadas en avatarCode (A-R)
         const uniqueFraternidades = [...new Set(
           result.data
             .map(s => getFraternityNameFromAvatarCode(s.avatarCode))
